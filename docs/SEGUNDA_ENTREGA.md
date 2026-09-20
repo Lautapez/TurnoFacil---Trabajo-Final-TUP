@@ -1,6 +1,7 @@
 🏥 TurnoFácil — Especificación de
 Arquitectura, Esquema de Base de Datos y
 Desglose Modular
+
 Trabajo Final Integrador (TFI) — Tecnicatura Universitaria en Programación (UTN)
 Asignaturas Integradas: Gestión de Desarrollo de Software / Metodología de Sistemas /
 Programación y Base de Datos
@@ -153,7 +154,8 @@ erDiagram
         date fecha
         time hora
         string estado
-    }                                                                             Desglose Modular y Estructura del Repositorio
+    }
+Desglose Modular y Estructura del Repositorio
 El código fuente se estructurará de forma modular dentro del repositorio único de GitHub,
 facilitando la división de tareas en el equipo y la claridad en las revisiones de código (Pull Requests).
 
