@@ -110,51 +110,7 @@ WHERE estado != 'CANCELADO';
 • PROFESIONALES (1) ------ (0..N) TURNOS: Un profesional gestiona múltiples turnos asociados a su agenda.
 • USUARIOS (Cliente) (1) ------ (0..N) TURNOS: Un cliente final puede reservar múltiples turnos a lo largo del tiempo.
 
-```mermaid
-erDiagram
-    USUARIOS ||--o| PROFESIONALES : "es (opcional)"
-    ESPECIALIDADES ||--o{ PROFESIONALES : "tiene"
-    PROFESIONALES ||--o{ HORARIOS : "define"
-    PROFESIONALES ||--o{ TURNOS : "atiende"
-    USUARIOS ||--o{ TURNOS : "reserva"
 
-    USUARIOS {
-        int id PK
-        string nombre
-        string apellido
-        string email
-        string password
-        string rol
-    }
-
-    ESPECIALIDADES {
-        int id PK
-        string nombre
-    }
-
-    PROFESIONALES {
-        int id PK
-        int usuario_id FK
-        int especialidad_id FK
-        string telefono
-    }
-
-    HORARIOS {
-        int id PK
-        int profesional_id FK
-        int dia_semana
-        time hora_inicio
-        time hora_fin
-    }
-
-    TURNOS {
-        int id PK
-        int usuario_id FK
-        int profesional_id FK
-        date fecha
-        time hora
-        string estado
-    }
 Desglose Modular y Estructura del Repositorio
 El código fuente se estructurará de forma modular dentro del repositorio único de GitHub,
 facilitando la división de tareas en el equipo y la claridad en las revisiones de código (Pull Requests).
