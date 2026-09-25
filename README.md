@@ -413,67 +413,54 @@ El sistema utiliza un **modelo relacional normalizado** para garantizar la integ
 
 #### Modelo Entidad-Relación en Formato de Código
 ```erDiagram
-    ROLES {
-        INT id PK
-        VARCHAR nombre
-    }
-
     USUARIOS {
-        INT id PK
-        VARCHAR nombre
-        VARCHAR apellido
-        VARCHAR email
-        VARCHAR password
-        BOOLEAN activo
-        INT rol_id FK
-    }
-
-    PROFESIONALES {
-        INT id PK
-        INT usuario_id FK
-        VARCHAR matricula
-        BOOLEAN activo
+        int id PK
+        string nombre
+        string apellido
+        string email UK
+        string password
+        string rol
+        boolean activo
+        timestamp created_at
     }
 
     ESPECIALIDADES {
-        INT id PK
-        VARCHAR nombre
-        VARCHAR descripcion
+        int id PK
+        string nombre UK
     }
 
-    PROFESIONAL_ESPECIALIDAD {
-        INT profesional_id PK, FK
-        INT especialidad_id PK, FK
+    PROFESIONALES {
+        int id PK
+        int usuario_id FK, UK
+        int especialidad_id FK
+        string telefono
+        boolean activo
     }
 
-    HORARIOS_ATENCION {
-        INT id PK
-        INT profesional_id FK
-        INT dia_semana
-        TIME hora_inicio
-        TIME hora_fin
+    HORARIOS {
+        int id PK
+        int profesional_id FK
+        int dia_semana
+        time hora_inicio
+        time hora_fin
     }
 
     TURNOS {
-        INT id PK
-        INT paciente_id FK
-        INT profesional_id FK
-        INT especialidad_id FK
-        DATE fecha
-        TIME hora_inicio
-        TIME hora_fin
-        INT duracion_minutos
-        VARCHAR estado
+        int id PK
+        int usuario_id FK
+        int profesional_id FK
+        date fecha
+        time hora
+        int duracion_minutos
+        string estado
+        timestamp created_at
     }
 
-    ROLES ||--o{ USUARIOS : "asignado a"
-    USUARIOS ||--|| PROFESIONALES : "extiende datos"
-    PROFESIONALES ||--o{ PROFESIONAL_ESPECIALIDAD : "posee"
-    ESPECIALIDADES ||--o{ PROFESIONAL_ESPECIALIDAD : "pertenece a"
-    PROFESIONALES ||--o{ HORARIOS_ATENCION : "configura"
-    USUARIOS ||--o{ TURNOS : "reserva como paciente"
+    ESPECIALIDADES ||--o{ PROFESIONALES : "clasifica"
+    USUARIOS ||--o{ PROFESIONALES : "es perfil de"
+    PROFESIONALES ||--o{ HORARIOS : "configura"
     PROFESIONALES ||--o{ TURNOS : "atiende"
-    ESPECIALIDADES ||--o{ TURNOS : "corresponde a"
+    USUARIOS ||--o{ TURNOS : "reserva"
 ```
 
 ---
