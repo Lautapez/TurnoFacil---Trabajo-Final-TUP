@@ -120,62 +120,74 @@ Forma Normal alcanzada: El esquema cumple con la 1FN (atributos atómicos), la 2
 
 Anomalías evitadas: Un ejemplo clave de esto es la separación de la tabla especialidades. Si en lugar de ello se hubiera modelado la especialidad como un simple campo de texto (VARCHAR) dentro de la tabla profesionales, se habrían generado anomalías de actualización y redundancia de datos. Por ejemplo, si fuera necesario corregir el nombre de una especialidad (como cambiar "Cardiología" por "Cardiología Clínica"), habría que actualizar múltiples filas de profesionales de manera manual, corriendo el riesgo de inconsistencias. Al aislarla en su propia tabla relacionada por clave foránea (especialidad_id), la modificación se realiza en un único registro, garantizando la integridad referencial y la consistencia de los datos.
 
-3.3 DDL Preliminar (Definición de Esquema)
+### 3.3 DDL Preliminar (Definición de Esquema)
+
+```sql
 -- 1. Tabla de Usuarios (Centraliza la autenticación y control de accesos)
 CREATE TABLE usuarios (
-id SERIAL PRIMARY KEY,
-nombre VARCHAR(100) NOT NULL,
-apellido VARCHAR(100) NOT NULL,
-email VARCHAR(150) UNIQUE NOT NULL,
-password VARCHAR(255) NOT NULL, -- Hash BCrypt
-rol VARCHAR(30) NOT NULL CHECK (rol IN ('CLIENTE', 'PROFESIONAL', 'ADMINISTRADOR')),
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL, -- Hash BCrypt
+    rol VARCHAR(30) NOT NULL CHECK (rol IN ('CLIENTE', 'PROFESIONAL', 'ADMINISTRADOR')),
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. Tabla de Especialidades (Normalización)
 CREATE TABLE especialidades (
-id SERIAL PRIMARY KEY,
-nombre VARCHAR(100) NOT NULL UNIQUE
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE
 );
 
 -- 3. Tabla de Profesionales
 CREATE TABLE profesionales (
-id SERIAL PRIMARY KEY,
-usuario_id INT NOT NULL UNIQUE,
-especialidad_id INT NOT NULL,
-telefono VARCHAR(30) NOT NULL,
-CONSTRAINT fk_profesional_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-CONSTRAINT fk_profesional_especialidad FOREIGN KEY (especialidad_id) REFERENCES especialidades(id)
+    id SERIAL PRIMARY KEY,
+    usuario_id INT NOT NULL UNIQUE,
+    especialidad_id INT NOT NULL,
+    telefono VARCHAR(30) NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    CONSTRAINT fk_profesional_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    CONSTRAINT fk_profesional_especialidad FOREIGN KEY (especialidad_id) REFERENCES especialidades(id)
 );
 
 -- 4. Tabla de Horarios (Disponibilidad semanal configurada por el profesional)
 CREATE TABLE horarios (
-id SERIAL PRIMARY KEY,
-profesional_id INT NOT NULL,
-dia_semana INT NOT NULL CHECK (dia_semana BETWEEN 1 AND 7), -- 1: Lunes, 7: Domingo
-hora_inicio TIME NOT NULL,
-hora_fin TIME NOT NULL,
-CONSTRAINT fk_horario_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id) ON DELETE CASCADE
+    id SERIAL PRIMARY KEY,
+    profesional_id INT NOT NULL,
+    dia_semana INT NOT NULL CHECK (dia_semana BETWEEN 1 AND 7), -- 1: Lunes, 7: Domingo
+    hora_inicio TIME NOT NULL,
+    hora_fin TIME NOT NULL,
+    CONSTRAINT fk_horario_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id) ON DELETE CASCADE
 );
 
 -- 5. Tabla de Turnos (Núcleo transaccional - Incluye duración según corrección de la tutora)
 CREATE TABLE turnos (
-id SERIAL PRIMARY KEY,
-usuario_id INT NOT NULL,        -- Cliente
-profesional_id INT NOT NULL,    -- Profesional
-fecha DATE NOT NULL,
-hora TIME NOT NULL,
-duracion_minutos INT NOT NULL DEFAULT 30, -- Resuelve solapamientos parciales
-estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'FINALIZADO')),
-created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-CONSTRAINT fk_turno_cliente FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-CONSTRAINT fk_turno_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id) ON DELETE CASCADE
+    id SERIAL PRIMARY KEY,
+    usuario_id INT NOT NULL, -- Cliente
+    profesional_id INT NOT NULL, -- Profesional
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    duracion_minutos INT NOT NULL DEFAULT 30, -- Resuelve solapamientos parciales
+    estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'FINALIZADO')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_turno_cliente FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    CONSTRAINT fk_turno_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id)
 );
 
 -- Índice único condicional: evita solapamientos solo para turnos NO cancelados
-CREATE UNIQUE INDEX uk_agenda_profesional_activos
-ON turnos (profesional_id, fecha, hora)
+CREATE UNIQUE INDEX uk_agenda_profesional_activos 
+ON turnos (profesional_id, fecha, hora) 
 WHERE estado != 'CANCELADO';
+```
+
+### 3.4 Políticas de Borrado y Trazabilidad (Baja Lógica / Soft Delete)
+Para dar cumplimiento al requisito de trazabilidad y mantenimiento de un historial organizado de turnos, se prescinde del borrado físico en cascada (ON DELETE CASCADE) sobre entidades críticas del sistema (usuarios y profesionales).
+
+Mecanismo implementado: Se adopta una política de baja lógica (Soft Delete) mediante la incorporación de un campo de control de estado (activo BOOLEAN DEFAULT TRUE) en las tablas correspondientes.
+
+Beneficio funcional: Cuando un usuario o un profesional deja de operar en la plataforma, su registro no se elimina de la base de datos de forma física. De esta forma, se preserva la integridad de la tabla turnos y de las relaciones históricas, permitiendo auditar turnos pasados, reportes operativos y estadísticas sin perder trazabilidad.
 
 4. 📦 Desglose Modular y Estructura del Repositorio
 El código fuente se estructurará de forma modular dentro del repositorio único de GitHub, facilitando la división de tareas en el equipo y la claridad en las revisiones de código (Pull Requests).
@@ -233,6 +245,7 @@ Plaintext
 │   └── schema.sql
 ├── README.md                 # Documentación técnica general del proyecto
 └── .gitignore
+
 5. 🔀 Estrategia de Control de Versiones y Flujo de Trabajo (Git Workflow)
 Para asegurar la calidad del código y mantener la estabilidad de la rama principal (main o develop), el equipo implementará el siguiente protocolo de desarrollo:
 
