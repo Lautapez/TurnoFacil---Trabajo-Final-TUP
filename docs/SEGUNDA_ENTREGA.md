@@ -255,6 +255,21 @@ Para asegurar la calidad del código y mantener la estabilidad de la rama princi
 
 🧪 Validación de Integridad: Se realizarán pruebas locales de integración entre el backend de Spring Boot y el frontend de React previo a la consolidación de entregables.
 
+5. 📋 Reglas de Negocio Explícitas
+
+Para garantizar la integridad operativa, la consistencia de los datos y proveer las validaciones lógicas necesarias para la programación del backend, se formalizan las siguientes reglas de negocio del sistema:
+
+* **RN-01: Disponibilidad horaria obligatoria**  
+  Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
+* **RN-02: Prevención de superposición de agendas**  
+  Un profesional no puede tener dos turnos activos (pendientes o confirmados) superpuestos en el mismo segmento de fecha y hora. Esta regla se implementa a nivel de persistencia mediante un índice único condicional en la base de datos que excluye únicamente a los turnos cancelados.
+* **RN-03: Liberación automática de horarios**  
+  Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
+* **RN-04: Restricciones de cancelación y reprogramación**  
+  Los turnos solo pueden ser cancelados o reprogramados mientras se encuentren en estado `PENDIENTE` o `CONFIRMADO`. Se establece un margen de validación lógica previo a la cita, conservando en todo momento el registro mediante baja lógica para no perder trazabilidad en el historial.
+* **RN-05: Restricción de acceso por roles**  
+  Un usuario con rol `CLIENTE` no posee permisos para modificar ni configurar agendas profesionales, ni para acceder a los paneles de control administrativos del sistema.
+
 6. 🏁 Conclusión y Próximos Pasos
 Con la presentación y aprobación de este documento técnico de diseño y la estructuración modular inicial en el repositorio, el equipo de TurnoFácil cumple formalmente con los requisitos de la 2.ª Entrega (Condición de Regular).
 
