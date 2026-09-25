@@ -409,17 +409,71 @@ El sistema utiliza un **modelo relacional normalizado** para garantizar la integ
 | `estado`         | Pendiente / Confirmado / Cancelado / Finalizado |
 
 ### 🔗 Modelo Entidad-Relación
+<img width="664" height="842" alt="image" src="https://github.com/user-attachments/assets/0ea95ac6-4458-4e3a-9686-31948e10df42" />
 
-```text
-[ USUARIOS ] 1 ───────── * [ PROFESIONALES ]
-      │                         │
-      │                         │
-      │                         │
-      └──────── * [ TURNOS ] * ─┘
-                         │
-                         │
-                         *
-                  [ HORARIOS ]
+#### Modelo Entidad-Relación en Formato de Código
+```erDiagram
+    ROLES {
+        INT id PK
+        VARCHAR nombre
+    }
+
+    USUARIOS {
+        INT id PK
+        VARCHAR nombre
+        VARCHAR apellido
+        VARCHAR email
+        VARCHAR password
+        BOOLEAN activo
+        INT rol_id FK
+    }
+
+    PROFESIONALES {
+        INT id PK
+        INT usuario_id FK
+        VARCHAR matricula
+        BOOLEAN activo
+    }
+
+    ESPECIALIDADES {
+        INT id PK
+        VARCHAR nombre
+        VARCHAR descripcion
+    }
+
+    PROFESIONAL_ESPECIALIDAD {
+        INT profesional_id PK, FK
+        INT especialidad_id PK, FK
+    }
+
+    HORARIOS_ATENCION {
+        INT id PK
+        INT profesional_id FK
+        INT dia_semana
+        TIME hora_inicio
+        TIME hora_fin
+    }
+
+    TURNOS {
+        INT id PK
+        INT paciente_id FK
+        INT profesional_id FK
+        INT especialidad_id FK
+        DATE fecha
+        TIME hora_inicio
+        TIME hora_fin
+        INT duracion_minutos
+        VARCHAR estado
+    }
+
+    ROLES ||--o{ USUARIOS : "asignado a"
+    USUARIOS ||--|| PROFESIONALES : "extiende datos"
+    PROFESIONALES ||--o{ PROFESIONAL_ESPECIALIDAD : "posee"
+    ESPECIALIDADES ||--o{ PROFESIONAL_ESPECIALIDAD : "pertenece a"
+    PROFESIONALES ||--o{ HORARIOS_ATENCION : "configura"
+    USUARIOS ||--o{ TURNOS : "reserva como paciente"
+    PROFESIONALES ||--o{ TURNOS : "atiende"
+    ESPECIALIDADES ||--o{ TURNOS : "corresponde a"
 ```
 
 ---
