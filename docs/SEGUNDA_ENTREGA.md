@@ -224,8 +224,8 @@ Interfaz centralizada en React para visualización de la agenda diaria.
 Filtros dinámicos por estado de turno (Pendiente, Confirmado, Cancelado).
 
 4.2 Organización de Directorios en el Repositorio de GitHub
-Plaintext
-/
+
+```text
 ├── backend/                  # Servidor API REST (Java / Spring Boot)
 │   ├── src/main/java/com/turnofacil/
 │   │   ├── controller/       # Controladores REST (Endpoints)
@@ -245,6 +245,7 @@ Plaintext
 │   └── schema.sql
 ├── README.md                 # Documentación técnica general del proyecto
 └── .gitignore
+```
 
 5. 🔀 Estrategia de Control de Versiones y Flujo de Trabajo (Git Workflow)
 Para asegurar la calidad del código y mantener la estabilidad de la rama principal (main o develop), el equipo implementará el siguiente protocolo de desarrollo:
