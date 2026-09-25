@@ -645,6 +645,23 @@ Implementación de:
 
 ---
 
+### 📋 Reglas de Negocio del Sistema
+
+El sistema implementa de forma lógica y transaccional las siguientes reglas de negocio para garantizar la consistencia operativa y respaldar las validaciones del backend:
+
+* **RN-01: Disponibilidad horaria obligatoria**  
+  Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
+* **RN-02: Prevención de superposición de agendas**  
+  Un profesional no puede tener dos turnos activos (pendientes o confirmados) superpuestos en el mismo segmento de fecha y hora. Esta regla se refuerza mediante el índice único condicional en la base de datos que excluye únicamente a los turnos cancelados.
+* **RN-03: Liberación automática de horarios**  
+  Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
+* **RN-04: Restricciones de cancelación y reprogramación**  
+  Los turnos solo pueden ser cancelados o reprogramados mientras se encuentren en estado `PENDIENTE` o `CONFIRMADO`, manteniendo el registro histórico en el sistema mediante la baja lógica para conservar la trazabilidad.
+* **RN-05: Restricción de acceso por roles**  
+  Un usuario con rol `CLIENTE` no puede modificar ni configurar agendas profesionales, así como tampoco acceder a los paneles de control administrativos del sistema.
+
+  ---
+
 ## 🎓 Trabajo Final Integrador
 
 **TurnoFácil** integra conocimientos de diferentes áreas de la **Tecnicatura Universitaria en Programación de la UTN**, combinando:
