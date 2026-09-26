@@ -266,8 +266,8 @@ Para garantizar la integridad operativa, la consistencia de los datos y proveer 
   Un profesional no puede tener dos turnos activos (pendientes o confirmados) superpuestos en el mismo segmento de fecha y hora. Esta regla se implementa a nivel de persistencia mediante un índice único condicional en la base de datos que excluye únicamente a los turnos cancelados.
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
-* **RN-04: Restricciones de cancelación y reprogramación**  
-  Los turnos solo pueden ser cancelados o reprogramados mientras se encuentren en estado `PENDIENTE` o `CONFIRMADO`. Se establece un margen de validación lógica previo a la cita, conservando en todo momento el registro mediante baja lógica para no perder trazabilidad en el historial.
+* **RN-04: Restricciones de cancelación y reprogramación**
+  Un turno puede ser cancelado o reprogramado mientras se encuentre en estado PENDIENTE o CONFIRMADO y siempre que falten al menos 2 horas para el inicio del turno. Una vez alcanzado ese límite, el cliente no podrá          cancelar ni reprogramar el turno desde el sistema.
 * **RN-05: Restricción de acceso por roles**  
   Un usuario con rol `CLIENTE` no posee permisos para modificar ni configurar agendas profesionales, ni para acceder a los paneles de control administrativos del sistema.
 
