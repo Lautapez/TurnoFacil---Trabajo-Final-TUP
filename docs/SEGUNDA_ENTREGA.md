@@ -122,6 +122,8 @@ Anomalías evitadas: Un ejemplo clave de esto es la separación de la tabla espe
 
 ### 3.3 DDL Preliminar (Definición de Esquema)
 
+En esta sección se presenta formalmente el script DDL para la creación de la estructura completa de la base de datos relacional. Esto incluye la definición de las tablas transaccionales y de soporte (usuarios, especialidades, profesionales, horarios y turnos), la incorporación de la extensión btree_gist, y la implementación de la restricción de exclusión transaccional no_solapamiento_turnos para garantizar la gestión correcta de los rangos de tiempo y la prevención de superposiciones.
+
 ```sql
 -- 1. Tabla de Usuarios (Centraliza la autenticación y control de accesos)
 CREATE TABLE usuarios (
