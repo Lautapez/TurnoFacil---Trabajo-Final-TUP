@@ -671,7 +671,7 @@ El sistema implementa de forma lógica y transaccional las siguientes reglas de 
 
   Un profesional no puede tener dos turnos activos (`PENDIENTE` o `CONFIRMADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha.
 
-Antes de registrar un nuevo turno, el sistema validará que el bloque horario solicitado no se encuentre comprendido dentro del rango horario de otro turno activo previamente registrado para el mismo profesional.
+  Antes de registrar un nuevo turno, el sistema validará que el bloque horario solicitado no se encuentre comprendido dentro del rango horario de otro turno activo previamente registrado para el mismo profesional.
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
 * **RN-04: Restricciones de cancelación y reprogramación**
@@ -680,7 +680,7 @@ Antes de registrar un nuevo turno, el sistema validará que el bloque horario so
 
   Además, la operación sólo estará permitida hasta 2 horas antes de la hora de inicio del turno. Una vez superado ese límite, el sistema rechazará cualquier solicitud de cancelación o reprogramación.
 
-La cancelación no elimina físicamente el registro del turno, sino que actualiza su estado a `CANCELADO`, preservando el historial y la trazabilidad de la información.
+  La cancelación no elimina físicamente el registro del turno, sino que actualiza su estado a `CANCELADO`, preservando el historial y la trazabilidad de la información.
 * **RN-05: Restricción de acceso por roles**  
   Un usuario con rol `CLIENTE` no puede modificar ni configurar agendas profesionales, así como tampoco acceder a los paneles de control administrativos del sistema.
 
