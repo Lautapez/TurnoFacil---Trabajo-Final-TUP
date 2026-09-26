@@ -378,14 +378,22 @@ El sistema utiliza un **modelo relacional normalizado** para garantizar la integ
 | `password` | Contraseña almacenada de forma segura |
 | `rol`      | Rol dentro del sistema                |
 
+#### 🧩 Especialidades
+
+| Campo    | Descripción                     |
+|----------|---------------------------------|
+| `id`     | Clave primaria                  |
+| `nombre` | Nombre único de la especialidad |
+
 #### 🩺 Profesionales
 
-| Campo          | Descripción              |
-| -------------- | ------------------------ |
-| `id`           | Clave primaria           |
-| `usuario_id`   | FK → usuarios            |
-| `especialidad` | Especialidad profesional |
-| `telefono`     | Teléfono de contacto     |
+| Campo             | Descripción                   |
+| ----------------  | ------------------------------|
+| `id`              | Clave primaria                |
+| `usuario_id`      | FK → usuarios                 |
+| `especialidad_id` | FK → especialidades           |
+| `telefono`        | Teléfono de contacto          |
+| `activo`          | Estado lógico del profesional |
 
 #### 🕐 Horarios
 
