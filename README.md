@@ -365,6 +365,14 @@ Uso obligatorio de:
 
 El sistema utiliza un **modelo relacional normalizado** para garantizar la integridad y consistencia de la información.
 
+### ✅ Justificación de Normalización
+
+El modelo de datos fue diseñado siguiendo los principios de la **Tercera Forma Normal (3FN)**, con el objetivo de reducir redundancias y evitar anomalías de inserción, actualización y eliminación.
+
+Como ejemplo, las especialidades fueron separadas en una entidad propia (`especialidades`) en lugar de almacenarse como texto dentro de la tabla `profesionales`. Esta decisión permite reutilizar registros de especialidades, mantener la consistencia de los datos y evitar duplicidades o errores de escritura.
+
+Asimismo, cada entidad almacena únicamente atributos propios de su dominio, eliminando dependencias transitivas y favoreciendo la integridad referencial mediante claves primarias y foráneas.
+
 ### 📊 Tablas principales
 
 #### 👤 Usuarios
@@ -661,16 +669,16 @@ El sistema implementa de forma lógica y transaccional las siguientes reglas de 
   Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
 * **RN-02: Prevención de superposición de agendas**
 
-Un profesional no puede tener dos turnos activos (`PENDIENTE` o `CONFIRMADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha.
+  Un profesional no puede tener dos turnos activos (`PENDIENTE` o `CONFIRMADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha.
 
 Antes de registrar un nuevo turno, el sistema validará que el bloque horario solicitado no se encuentre comprendido dentro del rango horario de otro turno activo previamente registrado para el mismo profesional.
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
 * **RN-04: Restricciones de cancelación y reprogramación**
 
-Un turno puede ser cancelado o reprogramado únicamente cuando se encuentre en estado `PENDIENTE` o `CONFIRMADO`.
+  Un turno puede ser cancelado o reprogramado únicamente cuando se encuentre en estado `PENDIENTE` o `CONFIRMADO`.
 
-Además, la operación sólo estará permitida hasta 2 horas antes de la hora de inicio del turno. Una vez superado ese límite, el sistema rechazará cualquier solicitud de cancelación o reprogramación.
+  Además, la operación sólo estará permitida hasta 2 horas antes de la hora de inicio del turno. Una vez superado ese límite, el sistema rechazará cualquier solicitud de cancelación o reprogramación.
 
 La cancelación no elimina físicamente el registro del turno, sino que actualiza su estado a `CANCELADO`, preservando el historial y la trazabilidad de la información.
 * **RN-05: Restricción de acceso por roles**  
