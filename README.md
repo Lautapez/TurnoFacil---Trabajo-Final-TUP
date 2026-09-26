@@ -659,12 +659,20 @@ El sistema implementa de forma lógica y transaccional las siguientes reglas de 
 
 * **RN-01: Disponibilidad horaria obligatoria**  
   Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
-* **RN-02: Prevención de superposición de agendas**  
-  Un profesional no puede tener dos turnos activos (pendientes o confirmados) superpuestos en el mismo segmento de fecha y hora. Esta regla se refuerza mediante el índice único condicional en la base de datos que excluye únicamente a los turnos cancelados.
+* **RN-02: Prevención de superposición de agendas**
+
+Un profesional no puede tener dos turnos activos (`PENDIENTE` o `CONFIRMADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha.
+
+Antes de registrar un nuevo turno, el sistema validará que el bloque horario solicitado no se encuentre comprendido dentro del rango horario de otro turno activo previamente registrado para el mismo profesional.
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
-* **RN-04: Restricciones de cancelación y reprogramación**  
-  Un turno puede ser cancelado o reprogramado mientras se encuentre en estado `PENDIENTE` o `CONFIRMADO` y siempre que falten al menos 2 horas para el inicio del turno. Una vez alcanzado ese límite, el cliente no podrá      cancelar ni reprogramar el turno desde el sistema.
+* **RN-04: Restricciones de cancelación y reprogramación**
+
+Un turno puede ser cancelado o reprogramado únicamente cuando se encuentre en estado `PENDIENTE` o `CONFIRMADO`.
+
+Además, la operación sólo estará permitida hasta 2 horas antes de la hora de inicio del turno. Una vez superado ese límite, el sistema rechazará cualquier solicitud de cancelación o reprogramación.
+
+La cancelación no elimina físicamente el registro del turno, sino que actualiza su estado a `CANCELADO`, preservando el historial y la trazabilidad de la información.
 * **RN-05: Restricción de acceso por roles**  
   Un usuario con rol `CLIENTE` no puede modificar ni configurar agendas profesionales, así como tampoco acceder a los paneles de control administrativos del sistema.
 
