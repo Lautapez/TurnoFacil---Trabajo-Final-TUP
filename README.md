@@ -409,10 +409,9 @@ El sistema utiliza un **modelo relacional normalizado** para garantizar la integ
 | `estado`         | Pendiente / Confirmado / Cancelado / Finalizado |
 
 ### 🔗 Modelo Entidad-Relación
-<img width="664" height="842" alt="image" src="https://github.com/user-attachments/assets/0ea95ac6-4458-4e3a-9686-31948e10df42" />
 
-#### Modelo Entidad-Relación en Formato de Código
-```erDiagram
+```mermaid
+erDiagram
     USUARIOS {
         int id PK
         string nombre
