@@ -162,24 +162,31 @@ CREATE TABLE horarios (
     CONSTRAINT fk_horario_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id) ON DELETE CASCADE
 );
 
--- 5. Tabla de Turnos (Núcleo transaccional - Incluye duración según corrección de la tutora)
+-- 5. Tabla de Turnos (Núcleo transaccional con control real de solapamiento parcial por duración)
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 CREATE TABLE turnos (
     id SERIAL PRIMARY KEY,
     usuario_id INT NOT NULL, -- Cliente
     profesional_id INT NOT NULL, -- Profesional
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
-    duracion_minutos INT NOT NULL DEFAULT 30, -- Resuelve solapamientos parciales
+    duracion_minutos INT NOT NULL DEFAULT 30, -- Duración del turno en minutos
     estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'FINALIZADO')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_turno_cliente FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    CONSTRAINT fk_turno_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id)
+    CONSTRAINT fk_turno_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id),
+    
+    -- Restricción de exclusión: Evita solapamientos parciales de turnos activos usando rangos de tiempo (tsrange)
+    CONSTRAINT no_solapamiento_turnos EXCLUDE USING gist (
+        profesional_id WITH =,
+        tsrange(
+            (fecha + hora)::timestamp,
+            (fecha + hora + (duracion_minutos * interval '1 minute'))::timestamp,
+            '[)'
+        ) WITH &&
+    ) WHERE (estado != 'CANCELADO')
 );
-
--- Índice único condicional: evita solapamientos solo para turnos NO cancelados
-CREATE UNIQUE INDEX uk_agenda_profesional_activos 
-ON turnos (profesional_id, fecha, hora) 
-WHERE estado != 'CANCELADO';
 ```
 
 ### 3.4 Políticas de Borrado y Trazabilidad (Baja Lógica / Soft Delete)
