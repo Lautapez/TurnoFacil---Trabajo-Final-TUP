@@ -407,14 +407,15 @@ El sistema utiliza un **modelo relacional normalizado** para garantizar la integ
 
 #### 📅 Turnos
 
-| Campo            | Descripción                                     |
-| ---------------- | ----------------------------------------------- |
-| `id`             | Clave primaria                                  |
-| `usuario_id`     | FK → usuarios                                   |
-| `profesional_id` | FK → profesionales                              |
-| `fecha`          | Fecha del turno                                 |
-| `hora`           | Hora del turno                                  |
-| `estado`         | Pendiente / Confirmado / Cancelado / Finalizado |
+| Campo              | Descripción                                     |
+| ------------------ | ----------------------------------------------- |
+| `id`               | Clave primaria                                  |
+| `usuario_id`       | FK → usuarios                                   |
+| `profesional_id`   | FK → profesionales                              |
+| `fecha`            | Fecha del turno                                 |
+| `hora`             | Hora del turno                                  |
+| `duracion_minutos` | Duración del turno en minutos                   |
+| `estado`           | Pendiente / Confirmado / Cancelado / Finalizado |
 
 ### 🔗 Modelo Entidad-Relación
 
@@ -663,7 +664,7 @@ El sistema implementa de forma lógica y transaccional las siguientes reglas de 
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
 * **RN-04: Restricciones de cancelación y reprogramación**  
-  Los turnos solo pueden ser cancelados o reprogramados mientras se encuentren en estado `PENDIENTE` o `CONFIRMADO`, manteniendo el registro histórico en el sistema mediante la baja lógica para conservar la trazabilidad.
+  Un turno puede ser cancelado o reprogramado mientras se encuentre en estado `PENDIENTE` o `CONFIRMADO` y siempre que falten al menos 2 horas para el inicio del turno. Una vez alcanzado ese límite, el cliente no podrá      cancelar ni reprogramar el turno desde el sistema.
 * **RN-05: Restricción de acceso por roles**  
   Un usuario con rol `CLIENTE` no puede modificar ni configurar agendas profesionales, así como tampoco acceder a los paneles de control administrativos del sistema.
 
