@@ -377,14 +377,16 @@ Asimismo, cada entidad almacena únicamente atributos propios de su dominio, eli
 
 #### 👤 Usuarios
 
-| Campo      | Descripción                           |
-| ---------- | ------------------------------------- |
-| `id`       | Clave primaria                        |
-| `nombre`   | Nombre del usuario                    |
-| `apellido` | Apellido del usuario                  |
-| `email`    | Correo electrónico                    |
-| `password` | Contraseña almacenada de forma segura |
-| `rol`      | Rol dentro del sistema                |
+| Campo        | Descripción                           |
+| ------------ | ------------------------------------- |
+| `id`         | Clave primaria                        |
+| `nombre`     | Nombre del usuario                    |
+| `apellido`   | Apellido del usuario                  |
+| `email`      | Correo electrónico                    |
+| `password`   | Contraseña almacenada de forma segura |
+| `rol`        | Rol dentro del sistema                |
+| `activo`     | Estado lógico del usuario             |
+| `created_at` | Fecha y hora de creación del usuario  |
 
 #### 🧩 Especialidades
 
@@ -668,10 +670,7 @@ El sistema implementa de forma lógica y transaccional las siguientes reglas de 
 * **RN-01: Disponibilidad horaria obligatoria**  
   Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
 * **RN-02: Prevención de superposición de agendas**
-
-  Un profesional no puede tener dos turnos activos (`PENDIENTE` o `CONFIRMADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha.
-
-  Antes de registrar un nuevo turno, el sistema validará que el bloque horario solicitado no se encuentre comprendido dentro del rango horario de otro turno activo previamente registrado para el mismo profesional.
+  Un profesional no puede tener dos turnos no cancelados (`PENDIENTE`, `CONFIRMADO` o `FINALIZADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha. La base de datos garantiza esta regla     mediante la restricción de exclusión `no_solapamiento_turnos`, que compara los rangos horarios de los turnos y excluye únicamente los registros en estado `CANCELADO`.
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
 * **RN-04: Restricciones de cancelación y reprogramación**
