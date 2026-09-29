@@ -220,7 +220,7 @@ Endpoints de consulta de disponibilidad en tiempo real para el cliente.
 
 📅 Módulo de Gestión Transaccional de Turnos (Appointments):
 
-Solicitud de turnos bajo validación de solapamiento (apoyado por el índice único compuesto en base de datos).
+Solicitud de turnos bajo validación de solapamiento, respaldada por la restricción de exclusión `no_solapamiento_turnos` implementada en PostgreSQL.
 
 Consulta de historial de turnos por cliente o profesional.
 
@@ -271,8 +271,15 @@ Para garantizar la integridad operativa, la consistencia de los datos y proveer 
 
 * **RN-01: Disponibilidad horaria obligatoria**  
   Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
-* **RN-02: Prevención de superposición de agendas**  
-  Un profesional no puede tener dos turnos activos (pendientes o confirmados) superpuestos en el mismo segmento de fecha y hora. Esta regla se implementa a nivel de persistencia mediante un índice único condicional en la base de datos que excluye únicamente a los turnos cancelados.
+* **RN-02: Prevención de superposición de agendas**
+  Un profesional no puede tener dos turnos no cancelados
+  (`PENDIENTE`, `CONFIRMADO` o `FINALIZADO`) cuyos intervalos horarios
+  se superpongan parcial o totalmente en una misma fecha.
+
+  Esta regla se implementa a nivel de persistencia mediante la
+  restricción de exclusión `no_solapamiento_turnos`, que utiliza
+  rangos de tiempo (`tsrange`) y excluye únicamente los turnos
+  con estado `CANCELADO`.
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
 * **RN-04: Restricciones de cancelación y reprogramación**
