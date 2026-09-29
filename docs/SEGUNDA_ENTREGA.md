@@ -7,16 +7,22 @@
 
 ---
 
-📋 **Índice**
+## 📋 Índice
 
 ---
 
-* 1. 📄 Introducción y Propósito del Documento
-* 2. 🏗️ Arquitectura del Sistema y Patrones de Diseño
-* 3. 🗄️ Modelo Lógico y Relacional de Base de Datos (PostgreSQL)
-* 4. 📦 Desglose Modular y Estructura del Repositorio
-* 5. 🔀 Estrategia de Control de Versiones y Flujo de Trabajo (Git Workflow)
-* 6. 🏁 Conclusión y Próximos Pasos
+1. 📄 Introducción y Propósito del Documento
+2. 🏗️ Arquitectura del Sistema y Patrones de Diseño
+3. 🗄️ Modelo Lógico y Relacional de Base de Datos (PostgreSQL)
+   - 3.1 Diagrama Entidad-Relación (ER)
+   - 3.2 Justificación del Nivel de Normalización
+   - 3.3 DDL Preliminar (Definición de Esquema)
+4. 📦 Desglose Modular y Estructura del Repositorio
+   - 4.1 Módulos Funcionales del MVP
+   - 4.2 Organización de Directorios en el Repositorio de GitHub
+5. 📋 Reglas de Negocio Explícitas
+6. 🔀 Estrategia de Control de Versiones y Flujo de Trabajo (Git Workflow)
+7. 🏁 Conclusión y Próximos Pasos
 
 ---
 
