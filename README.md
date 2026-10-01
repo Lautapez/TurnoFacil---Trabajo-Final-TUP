@@ -252,6 +252,28 @@ El código debe aplicar:
 
 ---
 
+### 📋 Reglas de Negocio del Sistema
+
+El sistema implementa de forma lógica y transaccional las siguientes reglas de negocio para garantizar la consistencia operativa y respaldar las validaciones del backend:
+
+* **RN-01: Disponibilidad horaria obligatoria**  
+  Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
+* **RN-02: Prevención de superposición de agendas**
+  Un profesional no puede tener dos turnos no cancelados (`PENDIENTE`, `CONFIRMADO` o `FINALIZADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha. La base de datos garantiza esta regla     mediante la restricción de exclusión `no_solapamiento_turnos`, que compara los rangos horarios de los turnos y excluye únicamente los registros en estado `CANCELADO`.
+* **RN-03: Liberación automática de horarios**  
+  Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
+* **RN-04: Restricciones de cancelación y reprogramación**
+
+  Un turno puede ser cancelado o reprogramado únicamente cuando se encuentre en estado `PENDIENTE` o `CONFIRMADO`.
+
+  Además, la operación sólo estará permitida hasta 2 horas antes de la hora de inicio del turno. Una vez superado ese límite, el sistema rechazará cualquier solicitud de cancelación o reprogramación.
+
+  La cancelación no elimina físicamente el registro del turno, sino que actualiza su estado a `CANCELADO`, preservando el historial y la trazabilidad de la información.
+* **RN-05: Restricción de acceso por roles**  
+  Un usuario con rol `CLIENTE` no puede modificar ni configurar agendas profesionales, así como tampoco acceder a los paneles de control administrativos del sistema.
+
+  ---
+
 ## 📝 Historias de Usuario
 
 ### HU01 — Registro de Nuevos Usuarios
@@ -664,27 +686,6 @@ Implementación de:
 
 ---
 
-### 📋 Reglas de Negocio del Sistema
-
-El sistema implementa de forma lógica y transaccional las siguientes reglas de negocio para garantizar la consistencia operativa y respaldar las validaciones del backend:
-
-* **RN-01: Disponibilidad horaria obligatoria**  
-  Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
-* **RN-02: Prevención de superposición de agendas**
-  Un profesional no puede tener dos turnos no cancelados (`PENDIENTE`, `CONFIRMADO` o `FINALIZADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha. La base de datos garantiza esta regla     mediante la restricción de exclusión `no_solapamiento_turnos`, que compara los rangos horarios de los turnos y excluye únicamente los registros en estado `CANCELADO`.
-* **RN-03: Liberación automática de horarios**  
-  Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
-* **RN-04: Restricciones de cancelación y reprogramación**
-
-  Un turno puede ser cancelado o reprogramado únicamente cuando se encuentre en estado `PENDIENTE` o `CONFIRMADO`.
-
-  Además, la operación sólo estará permitida hasta 2 horas antes de la hora de inicio del turno. Una vez superado ese límite, el sistema rechazará cualquier solicitud de cancelación o reprogramación.
-
-  La cancelación no elimina físicamente el registro del turno, sino que actualiza su estado a `CANCELADO`, preservando el historial y la trazabilidad de la información.
-* **RN-05: Restricción de acceso por roles**  
-  Un usuario con rol `CLIENTE` no puede modificar ni configurar agendas profesionales, así como tampoco acceder a los paneles de control administrativos del sistema.
-
-  ---
 
 ## 🎓 Trabajo Final Integrador
 
