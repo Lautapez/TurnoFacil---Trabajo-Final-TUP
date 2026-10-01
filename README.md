@@ -7,20 +7,21 @@
 
 ---
 
-## 📋 Índice
+📋 Índice
 
-1. [👥 Integrantes y Enfoque de Trabajo](#-integrantes-y-enfoque-de-trabajo)
-2. [🎯 Descripción y Visión de Negocio](#-descripción-y-visión-de-negocio)
-3. [⚠️ Problemática y Justificación](#️-problemática-y-justificación)
-4. [🎯 Objetivos](#-objetivos)
-5. [👤 Actores del Sistema](#-actores-del-sistema)
-6. [📦 Alcance y Módulos del MVP](#-alcance-y-módulos-del-mvp)
-7. [📝 Historias de Usuario](#-historias-de-usuario)
-8. [⚠️ Riesgos, Supuestos y Restricciones](#️-riesgos-supuestos-y-restricciones)
-9. [🗄️ Modelo de Base de Datos](#️-modelo-de-base-de-datos)
-10. [🏗️ Arquitectura y Stack Tecnológico](#️-arquitectura-y-stack-tecnológico)
-11. [🔌 Contratos de API REST](#-contratos-de-api-rest)
-12. [🚀 Roadmap de Escalabilidad](#-roadmap-de-escalabilidad)
+1. 👥 [Integrantes y Enfoque de Trabajo](#-integrantes-y-enfoque-de-trabajo)
+2. 🎯 [Descripción y Visión de Negocio](#-descripción-y-visi%C3%B3n-de-negocio)
+3. ⚠️ [Problemática y Justificación](#️-problemática-y-justificación)
+4. 🎯 [Objetivos](#-objetivos)
+5. 📋 [Reglas de Negocio del Sistema](#-reglas-de-negocio-del-sistema)
+6. 👤 [Actores del Sistema](#-actores-del-sistema)
+7. 📦 [Alcance y Módulos del MVP](#-alcance-y-módulos-del-mvp)
+8. 📝 [Historias de Usuario](#-historias-de-usuario)
+9. ⚠️ [Riesgos, Supuestos y Restricciones](#️-riesgos-supuestos-y-restricciones)
+10. 🗄️ [Modelo de Base de Datos](#️-modelo-de-base-de-datos)
+11. 🏗️️ [Arquitectura y Stack Tecnológico](#️-arquitectura-y-stack-tecnológico)
+12. 🔌 [Contratos de API REST](#-contratos-de-api-rest)
+13. 🚀 [Roadmap de Escalabilidad](#-roadmap-de-escalabilidad)
 
 ---
 
