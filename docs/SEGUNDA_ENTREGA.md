@@ -130,7 +130,7 @@ Anomalías evitadas: Un ejemplo clave de esto es la separación de la tabla espe
 
 En esta sección se presenta formalmente el script DDL para la creación de la estructura completa de la base de datos relacional. Esto incluye la definición de las tablas transaccionales y de soporte (usuarios, especialidades, profesionales, horarios y turnos), la incorporación de la extensión btree_gist, y la implementación de la restricción de exclusión transaccional no_solapamiento_turnos para garantizar la gestión correcta de los rangos de tiempo y la prevención de superposiciones.
 
-```sql
+```SQL
 -- 1. Tabla de Usuarios (Centraliza la autenticación y control de accesos)
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
@@ -167,7 +167,8 @@ CREATE TABLE horarios (
     dia_semana INT NOT NULL CHECK (dia_semana BETWEEN 1 AND 7), -- 1: Lunes, 7: Domingo
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
-    CONSTRAINT fk_horario_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id) ON DELETE CASCADE
+    CONSTRAINT fk_horario_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id) ON DELETE CASCADE,
+    CONSTRAINT chk_horario_valido CHECK (hora_fin > hora_inicio)
 );
 
 -- 5. Tabla de Turnos (Núcleo transaccional con control real de solapamiento parcial por duración)
@@ -180,7 +181,15 @@ CREATE TABLE turnos (
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
     duracion_minutos INT NOT NULL DEFAULT 30, -- Duración del turno en minutos
-    estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado IN ('PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'FINALIZADO')),
+    CHECK (duracion_minutos > 0),
+    estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' CHECK (
+        estado IN (
+            'PENDIENTE',
+            'CONFIRMADO',
+            'CANCELADO',
+            'FINALIZADO'
+        )
+    ),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_turno_cliente FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     CONSTRAINT fk_turno_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id),
