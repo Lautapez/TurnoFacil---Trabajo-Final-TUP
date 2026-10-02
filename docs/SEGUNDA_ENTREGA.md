@@ -68,7 +68,6 @@ El siguiente diagrama representa las principales entidades de la base de datos, 
 
 ```mermaid
 erDiagram
-
     USUARIOS {
         int id PK
         string nombre
@@ -117,8 +116,15 @@ erDiagram
     PROFESIONALES ||--o{ HORARIOS : "define"
     PROFESIONALES ||--o{ TURNOS : "atiende"
     USUARIOS ||--o{ TURNOS : "solicita"
-    }
----
+```
+
+### Relaciones principales
+
+- Un usuario puede estar asociado a un profesional.
+- Una especialidad puede estar asociada a varios profesionales.
+- Un profesional puede tener varios horarios de atención.
+- Un profesional puede atender múltiples turnos.
+- Un usuario puede solicitar múltiples turnos.
 
 ## 3.2 📐 Normalización
 
@@ -152,6 +158,7 @@ Por lo tanto, la separación de entidades permite reducir redundancia y mantener
 
 El siguiente DDL representa la estructura utilizada para la base de datos PostgreSQL.
 
+```sql
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -227,8 +234,9 @@ CREATE TABLE turnos (
     )
     WHERE (estado != 'CANCELADO')
 );
+```
 
-Validaciones implementadas
+### Validaciones implementadas
 
 El modelo incluye restricciones para garantizar la consistencia de los datos:
 
