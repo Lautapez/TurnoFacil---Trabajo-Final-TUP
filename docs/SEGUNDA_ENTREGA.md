@@ -105,7 +105,7 @@ erDiagram
         int profesional_id FK
         int usuario_id FK
         date fecha
-        time hora_inicio
+        time hora
         int duracion_minutos
         string estado
         timestamp created_at
