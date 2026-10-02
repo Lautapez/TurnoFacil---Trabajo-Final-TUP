@@ -313,24 +313,7 @@ no_solapamiento_turnos
 
 La estructura general del repositorio se organiza de la siguiente manera:
 
-TurnoFacil---Trabajo-Final-TUP/
-│
-├── backend/
-│
-├── database/
-│   └── schema.sql
-│
-├── docs/
-│
-├── frontend/
-│
-├── .gitignore
-│
-├── HISTORIAL.md
-│
-├── README.md
-│
-└── SEGUNDA_ENTREGA.md
+<img width="264" height="364" alt="image" src="https://github.com/user-attachments/assets/87c47234-b104-41fa-b88a-efb9ad793138" />
 
 La estructura permite separar el backend, frontend, documentación y archivos relacionados con la base de datos.
 
