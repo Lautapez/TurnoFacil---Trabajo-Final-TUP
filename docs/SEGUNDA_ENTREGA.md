@@ -163,7 +163,7 @@ Por lo tanto, la separación de entidades permite reducir redundancia y mantener
 
 El siguiente DDL representa la estructura utilizada para la base de datos PostgreSQL.
 
-```sql
+```SQL
 -- 1. Tabla de Usuarios (Centraliza la autenticación y control de accesos)
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
