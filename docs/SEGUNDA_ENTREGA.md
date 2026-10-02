@@ -321,6 +321,7 @@ TurnoFacil---Trabajo-Final-TUP/
 │   └── schema.sql
 │
 ├── docs/
+│   └── SEGUNDA_ENTREGA.md
 │
 ├── frontend/
 │
@@ -328,9 +329,7 @@ TurnoFacil---Trabajo-Final-TUP/
 │
 ├── HISTORIAL.md
 │
-├── README.md
-│
-└── SEGUNDA_ENTREGA.md
+└── README.md
 ```
 
 # 5. 📋 Reglas de Negocio Explícitas
