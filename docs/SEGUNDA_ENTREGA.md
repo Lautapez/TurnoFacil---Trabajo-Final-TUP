@@ -1,76 +1,74 @@
-🏥 **TurnoFácil — Especificación de Arquitectura, Esquema de Base de Datos y Desglose Modular**
+# Segunda Entrega — TurnoFácil
+
+## Índice
+
+1. [Introducción](#1--introducción)
+2. [Arquitectura del Sistema](#2--arquitectura-del-sistema)
+3. [Modelo Lógico / Relacional](#3--modelo-lógico--relacional)
+   - [3.1 Diagrama Entidad-Relación](#31--diagrama-entidad-relación)
+   - [3.2 Normalización](#32--normalización)
+   - [3.3 DDL de la Base de Datos](#33--ddl-de-la-base-de-datos)
+   - [3.4 Políticas de Borrado y Trazabilidad](#34--políticas-de-borrado-y-trazabilidad)
+4. [Desglose Modular y Estructura del Repositorio](#4--desglose-modular-y-estructura-del-repositorio)
+   - [4.1 Desglose Modular](#41--desglose-modular)
+   - [4.2 Estructura del Repositorio](#42--estructura-del-repositorio)
+5. [Reglas de Negocio Explícitas](#5--reglas-de-negocio-explícitas)
+6. [Estrategia de Control de Versiones y Flujo de Trabajo](#6--estrategia-de-control-de-versiones-y-flujo-de-trabajo)
+7. [Conclusión y Próximos Pasos](#7--conclusión-y-próximos-pasos)
 
 ---
 
-> **Trabajo Final Integrador (TFI)** — **Carrera:** Tecnicatura Universitaria en Programación (TUP) — **UTN**  
-> 👥 **Equipo:** Gabriel Carbajal, Cristian Paolucci, Lautaro Pez | 👩‍🏫 **Tutora:** Sofia Raia
+## 1. 📌 Introducción
+
+TurnoFácil es un sistema orientado a la gestión de turnos para profesionales, permitiendo administrar usuarios, profesionales, especialidades, horarios y turnos.
+
+La segunda entrega tiene como objetivo presentar la arquitectura propuesta, el modelo lógico y relacional de la base de datos, la normalización aplicada, las reglas de negocio, el desglose modular del sistema y la estrategia utilizada para el control de versiones.
+
+Esta documentación busca establecer una base técnica clara para las siguientes etapas del desarrollo.
 
 ---
 
-## 📋 Índice
+## 2. 🏗️ Arquitectura del Sistema
+
+El sistema adopta una arquitectura de tres capas, separando las responsabilidades principales de la aplicación.
+
+### Capa de Presentación
+
+Es la responsable de la interacción con el usuario y de la interfaz de la aplicación.
+
+En esta capa se encuentran los componentes correspondientes al frontend.
+
+### Capa de Lógica de Negocio
+
+Contiene las reglas y operaciones propias del sistema, como:
+
+- Gestión de usuarios.
+- Gestión de profesionales.
+- Gestión de especialidades.
+- Gestión de horarios.
+- Gestión de turnos.
+- Validación de disponibilidad.
+- Control de cancelaciones y reprogramaciones.
+
+### Capa de Datos
+
+Es responsable del almacenamiento y persistencia de la información.
+
+La base de datos utilizada es PostgreSQL y contiene las tablas necesarias para representar usuarios, profesionales, especialidades, horarios y turnos.
+
+La separación en capas permite mantener una distribución clara de responsabilidades y facilita el mantenimiento y evolución del sistema.
 
 ---
 
-1. 📄 Introducción y Propósito del Documento
-2. 🏗️ Arquitectura del Sistema y Patrones de Diseño
-3. 🗄️ Modelo Lógico y Relacional de Base de Datos (PostgreSQL)
-   - 3.1 Diagrama Entidad-Relación (ER)
-   - 3.2 Justificación del Nivel de Normalización
-   - 3.3 DDL Preliminar (Definición de Esquema)
-4. 📦 Desglose Modular y Estructura del Repositorio
-   - 4.1 Módulos Funcionales del MVP
-   - 4.2 Organización de Directorios en el Repositorio de GitHub
-5. 📋 Reglas de Negocio Explícitas
-6. 🔀 Estrategia de Control de Versiones y Flujo de Trabajo (Git Workflow)
-7. 🏁 Conclusión y Próximos Pasos
+# 3. 🗄️ Modelo Lógico / Relacional
 
----
+## 3.1 📊 Diagrama Entidad-Relación
 
-### 1. 📄 Introducción y Propósito del Documento
-
----
-
-El presente documento formaliza la **Segunda Instancia de Avance (Diseño y Módulos)** del proyecto **TurnoFácil**, conforme los lineamientos metodológicos de la currícula. Su propósito central es establecer los cimientos arquitectónicos, el modelo relacional de persistencia y la descomposición modular que regirán el ciclo de desarrollo de software en el repositorio único de GitHub. Este diseño garantiza la consistencia transaccional, el desacoplamiento de capas y la escalabilidad del Producto Mínimo Viable (MVP) antes de la fase de implementación intensiva.
-
----
-
-### 2. 🏗️ Arquitectura del Sistema y Patrones de Diseño
-
----
-
-El sistema adopta una arquitectura desacoplada de tres capas lógicas, separando de manera estricta la interfaz de usuario, la lógica de negocio y la persistencia de datos mediante contratos claros de comunicación:
-
-* 💻 **Capa de Presentación (Frontend):**
-  * **Tecnologías:** React 18+, Vite, Tailwind CSS.
-  * **Hosting:** Vercel.
-  * **Responsabilidad:** Renderizado de la interfaz, experiencia de usuario (UX/UI) y consumo de la API REST mediante clientes HTTP.
-
-* ⚙️ **Capa de Lógica de Negocio y API (Backend):**
-  * **Tecnologías:** Java 17+, Spring Boot, Spring Security (JWT).
-  * **Hosting:** Render.
-  * **Responsabilidad:** Procesamiento de reglas de negocio, validaciones transaccionales y seguridad en los endpoints.
-
-* 🗄️ **Capa de Persistencia (Base de Datos):**
-  * **Tecnologías:** PostgreSQL Relacional, Spring Data JPA / Hibernate.
-  * **Hosting:** Supabase.
-  * **Responsabilidad:** Almacenamiento seguro, normalización y garantía de integridad referencial.
-
-#### 2.1 Principios de Diseño Aplicados
-* **Separación de Responsabilidades (SoC):** Cada capa posee una única razón de cambio.
-* **Diseño Orientado a Servicios (RESTful):** La comunicación cliente-servidor se efectúa mediante contratos HTTP estrictos, utilizando códigos de estado estándar, transferencia de datos estructurados en formato JSON y autenticación basada en claims con JSON Web Tokens (JWT).
-
----
-
-3. 🗄️ Modelo Lógico y Relacional de Base de Datos (PostgreSQL)
-
-Para asegurar la integridad referencial, evitar anomalías de actualización y prevenir cruces o superposiciones críticas en las agendas, se diseña un esquema relacional normalizado en PostgreSQL.
-
-### 3.1 Diagrama Entidad-Relación (ER)
-
-A continuación, se visualiza el diagrama entidad-relación del sistema, detallando las entidades, sus atributos principales, tipos de datos, claves primarias (PK), claves foráneas (FK) y las cardinalidades de cada relación:
+El siguiente diagrama representa las principales entidades de la base de datos, sus atributos, claves primarias, claves foráneas y relaciones.
 
 ```mermaid
 erDiagram
+
     USUARIOS {
         int id PK
         string nombre
@@ -78,6 +76,7 @@ erDiagram
         string email UK
         string password
         string rol
+        boolean activo
         timestamp created_at
     }
 
@@ -91,6 +90,7 @@ erDiagram
         int usuario_id FK, UK
         int especialidad_id FK
         string telefono
+        boolean activo
     }
 
     HORARIOS {
@@ -103,206 +103,312 @@ erDiagram
 
     TURNOS {
         int id PK
-        int usuario_id FK
         int profesional_id FK
+        int usuario_id FK
         date fecha
-        time hora
+        time hora_inicio
         int duracion_minutos
         string estado
         timestamp created_at
     }
 
-    USUARIOS ||--o{ PROFESIONALES : "es (opcional)"
-    ESPECIALIDADES ||--o{ PROFESIONALES : "clasifica"
+    USUARIOS ||--o| PROFESIONALES : "puede ser"
+    ESPECIALIDADES ||--o{ PROFESIONALES : "tiene"
     PROFESIONALES ||--o{ HORARIOS : "define"
     PROFESIONALES ||--o{ TURNOS : "atiende"
-    USUARIOS ||--o{ TURNOS : "reserva"
-```
+    USUARIOS ||--o{ TURNOS : "solicita"
+    }
+---
 
-3.2 Justificación del Nivel de Normalización
-El diseño de la base de datos se encuentra estructurado bajo la Tercera Forma Normal (3FN).
+## 3.2 📐 Normalización
 
-Forma Normal alcanzada: El esquema cumple con la 1FN (atributos atómicos), la 2FN (atributos dependientes por completo de la clave primaria) y la 3FN (ausencia de dependencias transitivas, donde los atributos que no son clave dependen exclusivamente de la clave primaria).
+El modelo relacional se encuentra normalizado hasta la Tercera Forma Normal (3FN).
 
-Anomalías evitadas: Un ejemplo clave de esto es la separación de la tabla especialidades. Si en lugar de ello se hubiera modelado la especialidad como un simple campo de texto (VARCHAR) dentro de la tabla profesionales, se habrían generado anomalías de actualización y redundancia de datos. Por ejemplo, si fuera necesario corregir el nombre de una especialidad (como cambiar "Cardiología" por "Cardiología Clínica"), habría que actualizar múltiples filas de profesionales de manera manual, corriendo el riesgo de inconsistencias. Al aislarla en su propia tabla relacionada por clave foránea (especialidad_id), la modificación se realiza en un único registro, garantizando la integridad referencial y la consistencia de los datos.
+Primera Forma Normal (1FN)
 
-### 3.3 DDL Preliminar (Definición de Esquema)
+Se cumple porque los atributos de las tablas contienen valores atómicos y no existen grupos repetitivos dentro de una misma columna.
 
-En esta sección se presenta formalmente el script DDL para la creación de la estructura completa de la base de datos relacional. Esto incluye la definición de las tablas transaccionales y de soporte (usuarios, especialidades, profesionales, horarios y turnos), la incorporación de la extensión btree_gist, y la implementación de la restricción de exclusión transaccional no_solapamiento_turnos para garantizar la gestión correcta de los rangos de tiempo y la prevención de superposiciones.
+Por ejemplo, un profesional no almacena múltiples especialidades en un único campo de texto.
 
-```SQL
--- 1. Tabla de Usuarios (Centraliza la autenticación y control de accesos)
+Segunda Forma Normal (2FN)
+
+Se cumple porque los atributos no clave dependen de la totalidad de la clave primaria correspondiente.
+
+Las entidades poseen identificadores propios y los atributos pertenecientes a cada entidad dependen de su respectiva clave.
+
+Tercera Forma Normal (3FN)
+
+Se cumple porque los atributos no clave no dependen de otros atributos no clave.
+
+Por ejemplo, las especialidades se encuentran separadas en la tabla especialidades y los profesionales utilizan una clave foránea especialidad_id.
+
+Esto evita almacenar repetidamente el nombre de una especialidad dentro de cada registro de profesional.
+
+De esta forma se evita una anomalía de actualización. Si el nombre de una especialidad cambiara, sería necesario modificar un único registro en especialidades en lugar de modificar múltiples registros de profesionales.
+
+Por lo tanto, la separación de entidades permite reducir redundancia y mantener la integridad de los datos.
+
+## 3.3 🗃️ DDL de la Base de Datos
+
+El siguiente DDL representa la estructura utilizada para la base de datos PostgreSQL.
+
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL, -- Hash BCrypt
-    rol VARCHAR(30) NOT NULL CHECK (rol IN ('CLIENTE', 'PROFESIONAL', 'ADMINISTRADOR')),
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    rol VARCHAR(30) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Tabla de Especialidades (Normalización)
 CREATE TABLE especialidades (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE
 );
 
--- 3. Tabla de Profesionales
 CREATE TABLE profesionales (
     id SERIAL PRIMARY KEY,
-    usuario_id INT NOT NULL UNIQUE,
-    especialidad_id INT NOT NULL,
-    telefono VARCHAR(30) NOT NULL,
-    activo BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT fk_profesional_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    CONSTRAINT fk_profesional_especialidad FOREIGN KEY (especialidad_id) REFERENCES especialidades(id)
+    usuario_id INTEGER NOT NULL UNIQUE REFERENCES usuarios(id),
+    especialidad_id INTEGER NOT NULL REFERENCES especialidades(id),
+    telefono VARCHAR(30),
+    activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
--- 4. Tabla de Horarios (Disponibilidad semanal configurada por el profesional)
 CREATE TABLE horarios (
     id SERIAL PRIMARY KEY,
-    profesional_id INT NOT NULL,
-    dia_semana INT NOT NULL CHECK (dia_semana BETWEEN 1 AND 7), -- 1: Lunes, 7: Domingo
+    profesional_id INTEGER NOT NULL
+        REFERENCES profesionales(id)
+        ON DELETE CASCADE,
+    dia_semana INTEGER NOT NULL
+        CHECK (dia_semana BETWEEN 1 AND 7),
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
-    CONSTRAINT fk_horario_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id) ON DELETE CASCADE,
-    CONSTRAINT chk_horario_valido CHECK (hora_fin > hora_inicio)
+    CONSTRAINT chk_horario_valido
+        CHECK (hora_fin > hora_inicio)
 );
 
--- 5. Tabla de Turnos (Núcleo transaccional con control real de solapamiento parcial por duración)
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE turnos (
     id SERIAL PRIMARY KEY,
-    usuario_id INT NOT NULL, -- Cliente
-    profesional_id INT NOT NULL, -- Profesional
+    profesional_id INTEGER NOT NULL
+        REFERENCES profesionales(id),
+    usuario_id INTEGER NOT NULL
+        REFERENCES usuarios(id),
     fecha DATE NOT NULL,
-    hora TIME NOT NULL,
-    duracion_minutos INT NOT NULL DEFAULT 30, -- Duración del turno en minutos
-    CHECK (duracion_minutos > 0),
-    estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE' CHECK (
-        estado IN (
-            'PENDIENTE',
-            'CONFIRMADO',
-            'CANCELADO',
-            'FINALIZADO'
-        )
-    ),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_turno_cliente FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    CONSTRAINT fk_turno_profesional FOREIGN KEY (profesional_id) REFERENCES profesionales(id),
-    
-    -- Restricción de exclusión: Evita solapamientos parciales de turnos activos usando rangos de tiempo (tsrange)
-    CONSTRAINT no_solapamiento_turnos EXCLUDE USING gist (
+    hora_inicio TIME NOT NULL,
+    duracion_minutos INTEGER NOT NULL
+        CHECK (duracion_minutos > 0),
+    estado VARCHAR(20) NOT NULL
+        CHECK (
+            estado IN (
+                'PENDIENTE',
+                'CONFIRMADO',
+                'CANCELADO',
+                'FINALIZADO'
+            )
+        ),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT no_solapamiento_turnos
+    EXCLUDE USING gist (
         profesional_id WITH =,
         tsrange(
-            (fecha + hora)::timestamp,
-            (fecha + hora + (duracion_minutos * interval '1 minute'))::timestamp,
+            (fecha + hora_inicio)::timestamp,
+            (
+                fecha
+                + hora_inicio
+                + (duracion_minutos || ' minutes')::interval
+            )::timestamp,
             '[)'
         ) WITH &&
-    ) WHERE (estado != 'CANCELADO')
+    )
+    WHERE (estado != 'CANCELADO')
 );
-```
 
-### 3.4 Políticas de Borrado y Trazabilidad (Baja Lógica / Soft Delete)
-Para dar cumplimiento al requisito de trazabilidad y mantenimiento de un historial organizado de turnos, se prescinde del borrado físico en cascada (ON DELETE CASCADE) sobre entidades críticas del sistema (usuarios y profesionales).
+Validaciones implementadas
 
-Mecanismo implementado: Se adopta una política de baja lógica (Soft Delete) mediante la incorporación de un campo de control de estado (activo BOOLEAN DEFAULT TRUE) en las tablas correspondientes.
+El modelo incluye restricciones para garantizar la consistencia de los datos:
 
-Beneficio funcional: Cuando un usuario o un profesional deja de operar en la plataforma, su registro no se elimina de la base de datos de forma física. De esta forma, se preserva la integridad de la tabla turnos y de las relaciones históricas, permitiendo auditar turnos pasados, reportes operativos y estadísticas sin perder trazabilidad.
+dia_semana solamente admite valores entre 1 y 7.
+hora_fin debe ser posterior a hora_inicio.
+duracion_minutos debe ser mayor que cero.
+estado solamente puede tomar los valores definidos.
+El correo electrónico de los usuarios es único.
+El usuario asociado a un profesional es único.
+La base de datos impide la superposición de turnos activos para un mismo profesional.
 
-4. 📦 Desglose Modular y Estructura del Repositorio
-El código fuente se estructurará de forma modular dentro del repositorio único de GitHub, facilitando la división de tareas en el equipo y la claridad en las revisiones de código (Pull Requests).
+La restricción:
 
-4.1 Módulos Funcionales del MVP
-🔐 Módulo de Autenticación y Control de Accesos (Security & Users):
+CONSTRAINT no_solapamiento_turnos
+EXCLUDE USING gist
 
-Gestión de altas de usuarios con encriptación de credenciales (BCrypt).
+permite impedir que dos turnos activos de un mismo profesional ocupen intervalos de tiempo superpuestos.
 
-Emisión y validación de tokens JWT mediante Spring Security para proteger los recursos de la API.
+Los turnos cancelados quedan excluidos de esta restricción mediante:
 
-Gestión de roles y permisos diferenciados (Cliente vs. Profesional/Admin).
+WHERE (estado != 'CANCELADO')
 
-🩺 Módulo de Gestión Profesional y Agendas (Professionals & Availability):
+Esto permite que una vez cancelado un turno, ese espacio horario pueda volver a utilizarse.
 
-Operaciones CRUD sobre perfiles profesionales y especialidades.
+## 3.4 🗑️ Políticas de Borrado y Trazabilidad
 
-Configuración y persistencia de franjas horarias semanales de atención.
+Para preservar la trazabilidad de los datos históricos, se utiliza el atributo activo en entidades críticas como usuarios y profesionales.
 
-Endpoints de consulta de disponibilidad en tiempo real para el cliente.
+De esta forma, un usuario o profesional puede quedar inactivo sin eliminar físicamente su registro.
 
-📅 Módulo de Gestión Transaccional de Turnos (Appointments):
+Esto permite conservar la información histórica asociada a los turnos realizados o cancelados.
 
-Solicitud de turnos bajo validación de solapamiento, respaldada por la restricción de exclusión `no_solapamiento_turnos` implementada en PostgreSQL.
+En el caso de los horarios, se utiliza:
 
-Consulta de historial de turnos por cliente o profesional.
+ON DELETE CASCADE
 
-Cancelación lógica de citas con actualización de estados.
+sobre la relación entre horarios y profesionales, debido a que los horarios dependen directamente del profesional y no representan información histórica que deba conservarse de forma independiente.
 
-📊 Módulo de Panel de Control Operativo (Dashboard & UI):
+En cambio, los turnos mantienen sus referencias a usuarios y profesionales, evitando eliminar información histórica asociada a ellos.
 
-Interfaz centralizada en React para visualización de la agenda diaria.
+La estrategia general es priorizar la baja lógica mediante activo para las entidades cuya información debe conservarse para trazabilidad.
 
-Filtros dinámicos por estado de turno (Pendiente, Confirmado, Cancelado).
+# 4. 📦 Desglose Modular y Estructura del Repositorio
 
-4.2 Organización de Directorios en el Repositorio de GitHub
+## 4.1 🧩 Desglose Modular
 
-```text
-├── backend/                  # Servidor API REST (Java / Spring Boot)
-│   ├── src/main/java/com/turnofacil/
-│   │   ├── controller/       # Controladores REST (Endpoints)
-│   │   ├── service/          # Lógica de Negocio y Servicios
-│   │   ├── repository/       # Interfaces Spring Data JPA
-│   │   ├── model/            # Entidades y Mapeo ORM (JPA Entities)
-│   │   └── security/         # Configuración de Spring Security y JWT
-│   └── pom.xml
-├── frontend/                 # Interfaz de Usuario (React / Vite / Tailwind)
-│   ├── src/
-│   │   ├── components/       # Componentes reutilizables UI
-│   │   ├── pages/            # Vistas principales (Dashboard, Login, Agenda)
-│   │   └── services/         # Clientes Axios para consumo de API REST
-│   │       └── App.jsx
-│   └── package.json
-├── database/                 # Scripts SQL de inicialización y DDL
+El sistema se organiza en módulos funcionales que separan las responsabilidades principales.
+
+Usuarios
+
+Responsable de la gestión de usuarios del sistema, incluyendo sus datos básicos, rol y estado de actividad.
+
+Profesionales
+
+Permite gestionar la información específica de los profesionales, su especialidad, teléfono y estado de actividad.
+
+Especialidades
+
+Permite administrar las especialidades disponibles y asociarlas con los profesionales.
+
+Horarios
+
+Permite definir los días y horarios de atención de cada profesional.
+
+Turnos
+
+Gestiona la creación, confirmación, cancelación y finalización de turnos.
+
+Además, este módulo aplica las reglas relacionadas con la disponibilidad y evita la superposición de turnos mediante la restricción de exclusión:
+
+no_solapamiento_turnos
+
+## 4.2 📁 Estructura del Repositorio
+
+La estructura general del repositorio se organiza de la siguiente manera:
+
+TurnoFacil---Trabajo-Final-TUP/
+│
+├── backend/
+│
+├── database/
 │   └── schema.sql
-├── README.md                 # Documentación técnica general del proyecto
-└── .gitignore
-```
+│
+├── docs/
+│
+├── frontend/
+│
+├── .gitignore
+│
+├── HISTORIAL.md
+│
+├── README.md
+│
+└── SEGUNDA_ENTREGA.md
 
-5. 🔀 Estrategia de Control de Versiones y Flujo de Trabajo (Git Workflow)
-Para asegurar la calidad del código y mantener la estabilidad de la rama principal (main o develop), el equipo implementará el siguiente protocolo de desarrollo:
+La estructura permite separar el backend, frontend, documentación y archivos relacionados con la base de datos.
 
-🌿 Ramas por Funcionalidad (Feature Branches): Ningún cambio directo sobre la rama principal. Cada módulo o tarea se desarrollará en una rama derivada (ej. feature/modulo-turnos, fix/seguridad-jwt).
+El archivo .gitignore permite evitar que archivos innecesarios o generados localmente sean incorporados al repositorio.
 
-👀 Revisiones Cruzadas (Pull Requests): Todo incremento de código requerirá al menos la aprobación de un miembro distinto del equipo antes de ser integrado (Code Review cruzado).
+# 5. 📋 Reglas de Negocio Explícitas
+RN-01 — Disponibilidad de profesionales
 
-🧪 Validación de Integridad: Se realizarán pruebas locales de integración entre el backend de Spring Boot y el frontend de React previo a la consolidación de entregables.
+Los turnos solamente pueden solicitarse dentro de los horarios de atención definidos para el profesional.
 
-5. 📋 Reglas de Negocio Explícitas
+La disponibilidad se determina a partir de los registros existentes en la tabla horarios.
 
-Para garantizar la integridad operativa, la consistencia de los datos y proveer las validaciones lógicas necesarias para la programación del backend, se formalizan las siguientes reglas de negocio del sistema:
+RN-02 — Prevención de superposición de agendas
 
-* **RN-01: Disponibilidad horaria obligatoria**  
-  Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
-* **RN-02: Prevención de superposición de agendas**
-  Un profesional no puede tener dos turnos no cancelados
-  (`PENDIENTE`, `CONFIRMADO` o `FINALIZADO`) cuyos intervalos horarios
-  se superpongan parcial o totalmente en una misma fecha.
+Un profesional no puede tener dos turnos activos que se superpongan en el tiempo.
 
-  Esta regla se implementa a nivel de persistencia mediante la
-  restricción de exclusión `no_solapamiento_turnos`, que utiliza
-  rangos de tiempo (`tsrange`) y excluye únicamente los turnos
-  con estado `CANCELADO`.
-* **RN-03: Liberación automática de horarios**  
-  Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
-* **RN-04: Restricciones de cancelación y reprogramación**
-  Un turno puede ser cancelado o reprogramado mientras se encuentre en estado PENDIENTE o CONFIRMADO y siempre que falten al menos 2 horas para el inicio del turno. Una vez alcanzado ese límite, el cliente no podrá          cancelar ni reprogramar el turno desde el sistema.
-* **RN-05: Restricción de acceso por roles**  
-  Un usuario con rol `CLIENTE` no posee permisos para modificar ni configurar agendas profesionales, ni para acceder a los paneles de control administrativos del sistema.
+Se consideran activos los turnos cuyo estado sea:
 
-6. 🏁 Conclusión y Próximos Pasos
-Con la presentación y aprobación de este documento técnico de diseño y la estructuración modular inicial en el repositorio, el equipo de TurnoFácil cumple formalmente con los requisitos de la 2.ª Entrega (Condición de Regular).
+PENDIENTE
+CONFIRMADO
+FINALIZADO
 
-Una vez obtenido el aval explícito de la tutora Sofia Raia y del comité, el proyecto procederá a la fase de implementación intensiva del código fuente, despliegue incremental en servicios cloud (Render, Vercel, Supabase) y preparación orientada hacia la entrega final del sistema.
+Los turnos con estado CANCELADO no bloquean la disponibilidad.
+
+La base de datos implementa esta regla mediante la restricción de exclusión:
+
+CONSTRAINT no_solapamiento_turnos
+EXCLUDE USING gist
+
+De esta manera, la regla no depende únicamente de la lógica de la aplicación, sino que también queda garantizada a nivel de base de datos.
+
+RN-03 — Cancelación y liberación del horario
+
+Cuando un turno es cancelado, deja de bloquear el horario correspondiente.
+
+Esto se logra mediante la condición:
+
+WHERE (estado != 'CANCELADO')
+
+de la restricción no_solapamiento_turnos.
+
+Por lo tanto, un horario ocupado por un turno cancelado puede ser utilizado nuevamente.
+
+RN-04 — Cancelación y reprogramación
+
+La cancelación o reprogramación de un turno está permitida únicamente para turnos en estado:
+
+PENDIENTE
+CONFIRMADO
+
+Además, estas operaciones deben realizarse con una anticipación mínima de dos horas respecto del turno.
+
+Los turnos finalizados o cancelados no pueden volver a modificarse.
+
+RN-05 — Restricción por roles
+
+Las operaciones disponibles para cada usuario dependen del rol asignado.
+
+El sistema diferencia las acciones correspondientes a los distintos tipos de usuario, evitando que un usuario realice operaciones que no le corresponden.
+
+# 6. 🔀 Estrategia de Control de Versiones y Flujo de Trabajo
+
+El proyecto utiliza Git y GitHub como herramientas para el control de versiones.
+
+El repositorio remoto permite centralizar el código y mantener un historial de los cambios realizados.
+
+El flujo de trabajo utilizado contempla:
+
+Crear o modificar los archivos correspondientes.
+Revisar los cambios realizados.
+Registrar los cambios mediante un commit.
+Subir los cambios al repositorio remoto mediante push.
+Verificar que el repositorio de GitHub contenga la versión actualizada.
+
+Los commits permiten identificar las modificaciones realizadas durante el desarrollo y facilitan el seguimiento de las distintas entregas.
+
+El archivo .gitignore permite evitar subir archivos temporales, configuraciones locales u otros elementos que no deben formar parte del repositorio.
+
+# 7. 🏁 Conclusión y Próximos Pasos
+
+La segunda entrega establece la base técnica del proyecto TurnoFácil.
+
+Se definió una arquitectura de tres capas, un modelo relacional normalizado hasta 3FN y un esquema de base de datos PostgreSQL con restricciones destinadas a garantizar la integridad de la información.
+
+También se documentaron las principales reglas de negocio, incluyendo la disponibilidad de profesionales, la prevención de superposición de turnos, la liberación de horarios mediante cancelaciones y las políticas de cancelación y reprogramación.
+
+La utilización de una restricción EXCLUDE USING gist permite garantizar directamente desde la base de datos que no existan turnos activos superpuestos para un mismo profesional.
+
+Como próximos pasos se contempla continuar con la implementación e integración de los distintos módulos del sistema, incorporando las funcionalidades definidas para la aplicación y validando su funcionamiento de manera integral.
