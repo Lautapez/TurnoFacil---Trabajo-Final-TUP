@@ -315,14 +315,26 @@ Además, este módulo aplica las reglas relacionadas con la disponibilidad y evi
 no_solapamiento_turnos
 
 ## 4.2 📁 Estructura del Repositorio
-
-La estructura general del repositorio se organiza de la siguiente manera:
-
-<img width="264" height="364" alt="image" src="https://github.com/user-attachments/assets/87c47234-b104-41fa-b88a-efb9ad793138" />
-
-La estructura permite separar el backend, frontend, documentación y archivos relacionados con la base de datos.
-
-El archivo .gitignore permite evitar que archivos innecesarios o generados localmente sean incorporados al repositorio.
+```
+TurnoFacil---Trabajo-Final-TUP/
+│
+├── backend/
+│
+├── database/
+│   └── schema.sql
+│
+├── docs/
+│
+├── frontend/
+│
+├── .gitignore
+│
+├── HISTORIAL.md
+│
+├── README.md
+│
+└── SEGUNDA_ENTREGA.md
+```
 
 # 5. 📋 Reglas de Negocio Explícitas
 RN-01 — Disponibilidad de profesionales
