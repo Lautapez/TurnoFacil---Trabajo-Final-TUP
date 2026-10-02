@@ -7,8 +7,8 @@
 3. [Modelo Lógico / Relacional](#3--modelo-lógico--relacional)
    - [3.1 Diagrama Entidad-Relación](#31--diagrama-entidad-relación)
    - [3.2 Normalización](#32--normalización)
-   - [3.3 DDL de la Base de Datos](#33--ddl-de-la-base-de-datos)
-   - [3.4 Políticas de Borrado y Trazabilidad](#34--políticas-de-borrado-y-trazabilidad)
+   - [3.3 ️ DDL de la Base de Datos](#33--ddl-de-la-base-de-datos)
+   - [3.4 ️ Políticas de Borrado y Trazabilidad](#34--políticas-de-borrado-y-trazabilidad)
 4. [Desglose Modular y Estructura del Repositorio](#4--desglose-modular-y-estructura-del-repositorio)
    - [4.1 Desglose Modular](#41--desglose-modular)
    - [4.2 Estructura del Repositorio](#42--estructura-del-repositorio)
@@ -18,7 +18,7 @@
 
 ---
 
-## 1. 📌 Introducción
+## 1.  Introducción
 
 TurnoFácil es un sistema orientado a la gestión de turnos para profesionales, permitiendo administrar usuarios, profesionales, especialidades, horarios y turnos.
 
@@ -28,7 +28,7 @@ Esta documentación busca establecer una base técnica clara para las siguientes
 
 ---
 
-## 2. 🏗️ Arquitectura del Sistema
+## 2.  Arquitectura del Sistema
 
 El sistema adopta una arquitectura de tres capas, separando las responsabilidades principales de la aplicación.
 
@@ -60,7 +60,7 @@ La separación en capas permite mantener una distribución clara de responsabili
 
 ---
 
-# 3. 🗄️ Modelo Lógico / Relacional
+# 3.  Modelo Lógico / Relacional
 
 ## 3.1 📊 Diagrama Entidad-Relación
 
@@ -154,7 +154,7 @@ De esta forma se evita una anomalía de actualización. Si el nombre de una espe
 
 Por lo tanto, la separación de entidades permite reducir redundancia y mantener la integridad de los datos.
 
-## 3.3 🗃️ DDL de la Base de Datos
+## 3.3  DDL de la Base de Datos
 
 El siguiente DDL representa la estructura utilizada para la base de datos PostgreSQL.
 
@@ -261,7 +261,7 @@ WHERE (estado != 'CANCELADO')
 
 Esto permite que una vez cancelado un turno, ese espacio horario pueda volver a utilizarse.
 
-## 3.4 🗑️ Políticas de Borrado y Trazabilidad
+## 3.4  Políticas de Borrado y Trazabilidad
 
 Para preservar la trazabilidad de los datos históricos, se utiliza el atributo activo en entidades críticas como usuarios y profesionales.
 
