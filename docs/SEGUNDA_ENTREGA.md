@@ -118,6 +118,11 @@ erDiagram
     USUARIOS ||--o{ TURNOS : "solicita"
 ```
 
+**Atributos clave destacados:**
+* **USUARIOS**: incluye el campo `activo` para la baja lógica preservando el historial.
+* **PROFESIONALES**: incluye el campo `activo` para la baja lógica manteniendo la trazabilidad.
+
+
 ### Relaciones principales
 
 - Un usuario puede estar asociado a un profesional.
