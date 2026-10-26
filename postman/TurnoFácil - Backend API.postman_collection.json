@@ -107,7 +107,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"profesionalId\": 1,\n  \"diaSemana\": 1,\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"17:00:00\"\n}",
+              "raw": "{\n  \"profesionalId\": 1,\n  \"diaSemana\": \"LUNES\",\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"17:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -142,7 +142,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"clienteId\": 1,\n  \"profesionalId\": 1,\n  \"fechaHora\": \"2026-11-01T10:00:00\"\n}",
+              "raw": "{\n  \"clienteId\": 1,\n  \"profesionalId\": 1,\n  \"fecha\": \"2026-11-01\",\n  \"hora\": \"10:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
