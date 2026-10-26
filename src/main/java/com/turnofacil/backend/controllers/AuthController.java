@@ -1,5 +1,6 @@
 package com.turnofacil.backend.controllers;
 
+import com.turnofacil.backend.dtos.LoginDTO;
 import com.turnofacil.backend.dtos.UsuarioRegistroDTO;
 import com.turnofacil.backend.dtos.UsuarioResponseDTO;
 import com.turnofacil.backend.services.UsuarioService;
@@ -16,7 +17,6 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
-    // POST /api/auth/register -> Registro seguro con DTO
     @PostMapping("/register")
     public ResponseEntity<?> registrar(@Valid @RequestBody UsuarioRegistroDTO dto) {
         try {
@@ -27,9 +27,8 @@ public class AuthController {
         }
     }
 
-    // POST /api/auth/login -> Autenticación segura
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UsuarioRegistroDTO loginRequest) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginRequest) {
         try {
             UsuarioResponseDTO usuario = usuarioService.login(loginRequest.getEmail(), loginRequest.getPassword());
             return ResponseEntity.ok(usuario);
