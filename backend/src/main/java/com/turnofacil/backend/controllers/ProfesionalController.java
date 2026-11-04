@@ -44,6 +44,13 @@ public class ProfesionalController {
         }
     }
 
+    // PUT /api/professionals/{id}/deactivate -> Baja lógica de un profesional
+    @PutMapping("/{id}/deactivate")
+    public ResponseEntity<Void> darDeBajaProfesional(@PathVariable Long id) {
+        profesionalService.darDeBajaProfesional(id);
+        return ResponseEntity.noContent().build();
+    }
+
     // GET /api/professionals/{id}/availability -> Consulta de horarios
     @GetMapping("/{id}/availability")
     public ResponseEntity<List<Horario>> obtenerHorarios(@PathVariable Long id) {

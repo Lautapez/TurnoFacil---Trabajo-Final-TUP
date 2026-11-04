@@ -3,6 +3,8 @@ package com.turnofacil.backend.services;
 import com.turnofacil.backend.dtos.TurnoRegistroDTO;
 import com.turnofacil.backend.dtos.TurnoResponseDTO;
 import com.turnofacil.backend.enums.EstadoTurno;
+import com.turnofacil.backend.exceptions.ConflictoTurnoException;
+import com.turnofacil.backend.exceptions.RecursoNoEncontradoException;
 import com.turnofacil.backend.models.Horario;
 import com.turnofacil.backend.models.Profesional;
 import com.turnofacil.backend.models.Turno;
@@ -13,9 +15,7 @@ import com.turnofacil.backend.repositories.TurnoRepository;
 import com.turnofacil.backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -43,10 +43,10 @@ public class TurnoService {
      */
     public TurnoResponseDTO crearTurno(TurnoRegistroDTO dto) {
         Usuario cliente = usuarioRepository.findById(dto.getClienteId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado con ID: " + dto.getClienteId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con ID: " + dto.getClienteId()));
 
         Profesional profesional = profesionalRepository.findById(dto.getProfesionalId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesional no encontrado con ID: " + dto.getProfesionalId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Profesional no encontrado con ID: " + dto.getProfesionalId()));
 
         // --- RN-01: Validar que el turno caiga dentro de los horarios del profesional ---
         List<Horario> horariosProfesional = horarioRepository.findByProfesionalId(dto.getProfesionalId());
@@ -60,7 +60,7 @@ public class TurnoService {
         );
 
         if (!estaDentroDeHorario) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El turno seleccionado está fuera de la disponibilidad horaria del profesional (RN-01).");
+            throw new ConflictoTurnoException("El turno seleccionado está fuera de la disponibilidad horaria del profesional (RN-01).");
         }
 
         // --- RN-02 y RN-03: Validar solapamiento excluyendo turnos CANCELADOS ---
@@ -69,7 +69,7 @@ public class TurnoService {
         );
 
         if (turnoOcupado) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El profesional ya cuenta con un turno activo asignado en ese horario.");
+            throw new ConflictoTurnoException("El profesional ya cuenta con un turno activo asignado en ese horario.");
         }
 
         Turno turno = new Turno();
@@ -84,7 +84,7 @@ public class TurnoService {
             Turno turnoGuardado = turnoRepository.save(turno);
             return mapearAResponseDTO(turnoGuardado);
         } catch (DataIntegrityViolationException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error de integridad en la base de datos al guardar el turno.");
+            throw new ConflictoTurnoException("Error de integridad en la base de datos al guardar el turno.");
         }
     }
 
@@ -114,10 +114,10 @@ public class TurnoService {
      */
     public TurnoResponseDTO cancelarTurno(Long id) {
         Turno turno = turnoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El turno con ID " + id + " no fue encontrado."));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El turno con ID " + id + " no fue encontrado."));
 
         if (turno.getEstado() == EstadoTurno.CANCELADO) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El turno ya se encuentra cancelado.");
+            throw new ConflictoTurnoException("El turno ya se encuentra cancelado.");
         }
 
         // --- RN-04: Validar 2 horas de anticipación ---
@@ -125,10 +125,46 @@ public class TurnoService {
         LocalDateTime ahora = LocalDateTime.now();
 
         if (ahora.isAfter(fechaHoraTurno.minusHours(2))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Los turnos solo pueden cancelarse con al menos 2 horas de anticipación (RN-04).");
+            throw new ConflictoTurnoException("Los turnos solo pueden cancelarse con al menos 2 horas de anticipación (RN-04).");
         }
 
         turno.setEstado(EstadoTurno.CANCELADO);
+        Turno turnoActualizado = turnoRepository.save(turno);
+        return mapearAResponseDTO(turnoActualizado);
+    }
+
+    /**
+     * Confirma un turno pendiente.
+     */
+    public TurnoResponseDTO confirmarTurno(Long id) {
+        Turno turno = turnoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("El turno con ID " + id + " no fue encontrado."));
+
+        if (turno.getEstado() != EstadoTurno.PENDIENTE) {
+            throw new ConflictoTurnoException("Solo se pueden confirmar turnos que se encuentren en estado PENDIENTE.");
+        }
+
+        turno.setEstado(EstadoTurno.CONFIRMADO);
+        Turno turnoActualizado = turnoRepository.save(turno);
+        return mapearAResponseDTO(turnoActualizado);
+    }
+
+    /**
+     * Finaliza un turno previamente confirmado o activo.
+     */
+    public TurnoResponseDTO finalizarTurno(Long id) {
+        Turno turno = turnoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("El turno con ID " + id + " no fue encontrado."));
+
+        if (turno.getEstado() == EstadoTurno.FINALIZADO) {
+            throw new ConflictoTurnoException("El turno ya se encuentra finalizado.");
+        }
+
+        if (turno.getEstado() == EstadoTurno.CANCELADO) {
+            throw new ConflictoTurnoException("No se puede finalizar un turno que fue cancelado.");
+        }
+
+        turno.setEstado(EstadoTurno.FINALIZADO);
         Turno turnoActualizado = turnoRepository.save(turno);
         return mapearAResponseDTO(turnoActualizado);
     }

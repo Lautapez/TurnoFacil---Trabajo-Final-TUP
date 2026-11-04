@@ -20,13 +20,9 @@ public class TurnoController {
 
     // POST /api/appointments -> Solicita y bloquea un nuevo turno de forma segura (RN-01 a RN-03)
     @PostMapping
-    public ResponseEntity<?> crearTurno(@Valid @RequestBody TurnoRegistroDTO dto) {
-        try {
-            TurnoResponseDTO nuevoTurno = turnoService.crearTurno(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTurno);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<TurnoResponseDTO> crearTurno(@Valid @RequestBody TurnoRegistroDTO dto) {
+        TurnoResponseDTO nuevoTurno = turnoService.crearTurno(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTurno);
     }
 
     // GET /api/appointments/user/{id} -> Obtiene el historial de turnos de un cliente en DTO
@@ -45,12 +41,22 @@ public class TurnoController {
 
     // PUT /api/appointments/{id}/cancel -> Realiza la cancelación lógica utilizando DTO
     @PutMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelarTurno(@PathVariable Long id) {
-        try {
-            TurnoResponseDTO turnoCancelado = turnoService.cancelarTurno(id);
-            return ResponseEntity.ok(turnoCancelado);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    public ResponseEntity<TurnoResponseDTO> cancelarTurno(@PathVariable Long id) {
+        TurnoResponseDTO turnoCancelado = turnoService.cancelarTurno(id);
+        return ResponseEntity.ok(turnoCancelado);
+    }
+
+    // PUT /api/appointments/{id}/confirm -> Confirma un turno pendiente
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<TurnoResponseDTO> confirmarTurno(@PathVariable Long id) {
+        TurnoResponseDTO turnoConfirmado = turnoService.confirmarTurno(id);
+        return ResponseEntity.ok(turnoConfirmado);
+    }
+
+    // PUT /api/appointments/{id}/finish -> Finaliza un turno activo o confirmado
+    @PutMapping("/{id}/finish")
+    public ResponseEntity<TurnoResponseDTO> finalizarTurno(@PathVariable Long id) {
+        TurnoResponseDTO turnoFinalizado = turnoService.finalizarTurno(id);
+        return ResponseEntity.ok(turnoFinalizado);
     }
 }

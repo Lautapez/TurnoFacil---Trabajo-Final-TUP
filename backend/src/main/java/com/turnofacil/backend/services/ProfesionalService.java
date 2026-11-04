@@ -3,6 +3,8 @@ package com.turnofacil.backend.services;
 import com.turnofacil.backend.dtos.HorarioRegistroDTO;
 import com.turnofacil.backend.dtos.ProfesionalRegistroDTO;
 import com.turnofacil.backend.enums.Rol;
+import com.turnofacil.backend.exceptions.ConflictoTurnoException;
+import com.turnofacil.backend.exceptions.RecursoNoEncontradoException;
 import com.turnofacil.backend.models.Especialidad;
 import com.turnofacil.backend.models.Horario;
 import com.turnofacil.backend.models.Profesional;
@@ -50,15 +52,15 @@ public class ProfesionalService {
      */
     public Profesional guardarProfesionalDTO(ProfesionalRegistroDTO dto) {
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + dto.getUsuarioId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con ID: " + dto.getUsuarioId()));
 
         // Blindaje RN-05: Un usuario con rol CLIENTE no puede registrarse como profesional
         if (usuario.getRol() == Rol.CLIENTE) {
-            throw new RuntimeException("Acceso denegado: Un usuario con rol CLIENTE no puede realizar esta acción.");
+            throw new ConflictoTurnoException("Acceso denegado: Un usuario con rol CLIENTE no puede realizar esta acción.");
         }
 
         Especialidad especialidad = especialidadRepository.findById(dto.getEspecialidadId())
-                .orElseThrow(() -> new RuntimeException("Especialidad no encontrada con ID: " + dto.getEspecialidadId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Especialidad no encontrada con ID: " + dto.getEspecialidadId()));
 
         Profesional profesional = new Profesional();
         profesional.setUsuario(usuario);
@@ -77,6 +79,21 @@ public class ProfesionalService {
     }
 
     /**
+     * Realiza la baja lógica de un profesional cambiando su estado activo a false.
+     */
+    public void darDeBajaProfesional(Long id) {
+        Profesional profesional = profesionalRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Profesional no encontrado con ID: " + id));
+
+        if (!profesional.getActivo()) {
+            throw new ConflictoTurnoException("El profesional ya se encuentra inactivo.");
+        }
+
+        profesional.setActivo(false);
+        profesionalRepository.save(profesional);
+    }
+
+    /**
      * Consulta las franjas horarias configuradas para un profesional (GET /api/professionals/{id}/availability).
      */
     public List<Horario> obtenerHorariosPorProfesional(Long profesionalId) {
@@ -88,16 +105,16 @@ public class ProfesionalService {
      */
     public Horario guardarHorarioDTO(HorarioRegistroDTO dto) {
         Profesional profesional = profesionalRepository.findById(dto.getProfesionalId())
-                .orElseThrow(() -> new RuntimeException("Profesional no encontrado con ID: " + dto.getProfesionalId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Profesional no encontrado con ID: " + dto.getProfesionalId()));
 
         // Blindaje RN-05: Verificar que el usuario asociado no sea un CLIENTE intentando configurar agendas
         if (profesional.getUsuario() != null && profesional.getUsuario().getRol() == Rol.CLIENTE) {
-            throw new RuntimeException("Acceso denegado: Un usuario con rol CLIENTE no puede configurar ni modificar agendas profesionales.");
+            throw new ConflictoTurnoException("Acceso denegado: Un usuario con rol CLIENTE no puede configurar ni modificar agendas profesionales.");
         }
 
         // Validación de lógica: la hora de fin debe ser posterior a la hora de inicio
         if (!dto.getHoraFin().isAfter(dto.getHoraInicio())) {
-            throw new RuntimeException("La hora de fin debe ser posterior a la hora de inicio.");
+            throw new ConflictoTurnoException("La hora de fin debe ser posterior a la hora de inicio.");
         }
 
         Horario horario = new Horario();
