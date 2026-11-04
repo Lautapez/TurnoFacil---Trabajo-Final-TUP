@@ -18,14 +18,14 @@ public class TurnoController {
     @Autowired
     private TurnoService turnoService;
 
-    // POST /api/appointments -> Solicita y bloquea un nuevo turno de forma segura
+    // POST /api/appointments -> Solicita y bloquea un nuevo turno de forma segura (RN-01 a RN-03)
     @PostMapping
     public ResponseEntity<?> crearTurno(@Valid @RequestBody TurnoRegistroDTO dto) {
         try {
             TurnoResponseDTO nuevoTurno = turnoService.crearTurno(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTurno);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
@@ -36,13 +36,20 @@ public class TurnoController {
         return ResponseEntity.ok(turnos);
     }
 
+    // GET /api/appointments/professional/{id} -> Endpoint requerido para el Dashboard del Profesional (HU04)
+    @GetMapping("/professional/{id}")
+    public ResponseEntity<List<TurnoResponseDTO>> listarTurnosPorProfesional(@PathVariable Long id) {
+        List<TurnoResponseDTO> turnos = turnoService.listarTurnosPorProfesional(id);
+        return ResponseEntity.ok(turnos);
+    }
+
     // PUT /api/appointments/{id}/cancel -> Realiza la cancelación lógica utilizando DTO
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelarTurno(@PathVariable Long id) {
         try {
             TurnoResponseDTO turnoCancelado = turnoService.cancelarTurno(id);
             return ResponseEntity.ok(turnoCancelado);
-        } catch (RuntimeException e) {
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }

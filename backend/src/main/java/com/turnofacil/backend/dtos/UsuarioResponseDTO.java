@@ -18,4 +18,5 @@ public class UsuarioResponseDTO {
     private Rol rol;
     private Boolean activo;
     private LocalDateTime createdAt;
+    private String token;
 }
