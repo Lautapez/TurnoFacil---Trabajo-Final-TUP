@@ -3,9 +3,11 @@ package com.turnofacil.backend.services;
 import com.turnofacil.backend.dtos.TurnoRegistroDTO;
 import com.turnofacil.backend.dtos.TurnoResponseDTO;
 import com.turnofacil.backend.enums.EstadoTurno;
+import com.turnofacil.backend.models.Horario;
 import com.turnofacil.backend.models.Profesional;
 import com.turnofacil.backend.models.Turno;
 import com.turnofacil.backend.models.Usuario;
+import com.turnofacil.backend.repositories.HorarioRepository;
 import com.turnofacil.backend.repositories.ProfesionalRepository;
 import com.turnofacil.backend.repositories.TurnoRepository;
 import com.turnofacil.backend.repositories.UsuarioRepository;
@@ -15,8 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,23 +34,42 @@ public class TurnoService {
     @Autowired
     private ProfesionalRepository profesionalRepository;
 
+    @Autowired
+    private HorarioRepository horarioRepository; // Inyectamos para validar RN-01
+
     /**
-     * Registra un nuevo turno validando la regla de negocio de no solapamiento mediante DTO.
+     * Registra un nuevo turno validando la disponibilidad horaria (RN-01)
+     * y el no solapamiento excluyendo turnos cancelados (RN-02 y RN-03).
      */
     public TurnoResponseDTO crearTurno(TurnoRegistroDTO dto) {
         Usuario cliente = usuarioRepository.findById(dto.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + dto.getClienteId()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado con ID: " + dto.getClienteId()));
 
         Profesional profesional = profesionalRepository.findById(dto.getProfesionalId())
-                .orElseThrow(() -> new RuntimeException("Profesional no encontrado con ID: " + dto.getProfesionalId()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Profesional no encontrado con ID: " + dto.getProfesionalId()));
 
-        // Validación explícita de solapamiento de turno para la misma fecha y hora
-        boolean turnoOcupado = turnoRepository.existsByProfesionalIdAndFechaAndHora(
-                dto.getProfesionalId(), dto.getFecha(), dto.getHora()
+        // --- RN-01: Validar que el turno caiga dentro de los horarios del profesional ---
+        List<Horario> horariosProfesional = horarioRepository.findByProfesionalId(dto.getProfesionalId());
+
+        int duracion = dto.getDuracionMinutos() != null ? dto.getDuracionMinutos() : 30;
+        LocalTime horaInicioTurno = dto.getHora();
+        LocalTime horaFinTurno = horaInicioTurno.plusMinutes(duracion);
+
+        boolean estaDentroDeHorario = horariosProfesional.stream().anyMatch(h ->
+                !horaInicioTurno.isBefore(h.getHoraInicio()) && !horaFinTurno.isAfter(h.getHoraFin())
+        );
+
+        if (!estaDentroDeHorario) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El turno seleccionado está fuera de la disponibilidad horaria del profesional (RN-01).");
+        }
+
+        // --- RN-02 y RN-03: Validar solapamiento excluyendo turnos CANCELADOS ---
+        boolean turnoOcupado = turnoRepository.existsByProfesionalIdAndFechaAndHoraAndEstadoNot(
+                dto.getProfesionalId(), dto.getFecha(), dto.getHora(), EstadoTurno.CANCELADO
         );
 
         if (turnoOcupado) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El profesional ya cuenta con un turno asignado en ese horario.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El profesional ya cuenta con un turno activo asignado en ese horario.");
         }
 
         Turno turno = new Turno();
@@ -55,7 +77,7 @@ public class TurnoService {
         turno.setProfesional(profesional);
         turno.setFecha(dto.getFecha());
         turno.setHora(dto.getHora());
-        turno.setDuracionMinutos(dto.getDuracionMinutos() != null ? dto.getDuracionMinutos() : 30);
+        turno.setDuracionMinutos(duracion);
         turno.setEstado(EstadoTurno.PENDIENTE);
 
         try {
@@ -87,19 +109,28 @@ public class TurnoService {
     }
 
     /**
-     * Realiza la cancelación lógica de un turno (RN-03 y RN-04),
-     * utilizando el Enum EstadoTurno.CANCELADO.
+     * Realiza la cancelación lógica de un turno validando la regla RN-04
+     * (debe cancelarse con al menos 2 horas de anticipación).
      */
     public TurnoResponseDTO cancelarTurno(Long id) {
-        Optional<Turno> turnoOpt = turnoRepository.findById(id);
-        if (turnoOpt.isPresent()) {
-            Turno turno = turnoOpt.get();
-            turno.setEstado(EstadoTurno.CANCELADO);
-            Turno turnoActualizado = turnoRepository.save(turno);
-            return mapearAResponseDTO(turnoActualizado);
-        } else {
-            throw new RuntimeException("El turno con ID " + id + " no fue encontrado.");
+        Turno turno = turnoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El turno con ID " + id + " no fue encontrado."));
+
+        if (turno.getEstado() == EstadoTurno.CANCELADO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El turno ya se encuentra cancelado.");
         }
+
+        // --- RN-04: Validar 2 horas de anticipación ---
+        LocalDateTime fechaHoraTurno = LocalDateTime.of(turno.getFecha(), turno.getHora());
+        LocalDateTime ahora = LocalDateTime.now();
+
+        if (ahora.isAfter(fechaHoraTurno.minusHours(2))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Los turnos solo pueden cancelarse con al menos 2 horas de anticipación (RN-04).");
+        }
+
+        turno.setEstado(EstadoTurno.CANCELADO);
+        Turno turnoActualizado = turnoRepository.save(turno);
+        return mapearAResponseDTO(turnoActualizado);
     }
 
     // Método auxiliar para mapear Entidad -> TurnoResponseDTO
@@ -113,7 +144,7 @@ public class TurnoService {
                 turno.getHora(),
                 turno.getDuracionMinutos(),
                 turno.getEstado(),
-                null // created_at si lo agregas luego en la entidad/dto
+                null
         );
     }
 }
