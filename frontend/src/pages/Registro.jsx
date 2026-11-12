@@ -5,7 +5,7 @@ import { Alert, Campo } from '../components/ui.jsx';
 
 export default function Registro() {
   const navigate = useNavigate();
-  const [f, setF] = useState({ nombre: '', apellido: '', email: '', password: '', rol: 'CLIENTE' });
+  const [f, setF] = useState({ nombre: '', apellido: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
@@ -30,12 +30,6 @@ export default function Registro() {
           </div>
           <Campo label="Correo electrónico" id="email"><input id="email" type="email" required className="input" value={f.email} onChange={set('email')} /></Campo>
           <Campo label="Contraseña (mínimo 6 caracteres)" id="password"><input id="password" type="password" minLength={6} required className="input" value={f.password} onChange={set('password')} /></Campo>
-          <Campo label="Quiero usar TurnoFácil como" id="rol">
-            <select id="rol" className="input" value={f.rol} onChange={set('rol')}>
-              <option value="CLIENTE">Cliente / paciente</option>
-              <option value="PROFESIONAL">Profesional</option>
-            </select>
-          </Campo>
           <button className="btn-primary w-full" disabled={enviando}>{enviando ? 'Creando cuenta…' : 'Crear cuenta'}</button>
         </form>
         <p className="mt-4 text-center text-sm text-muted">
