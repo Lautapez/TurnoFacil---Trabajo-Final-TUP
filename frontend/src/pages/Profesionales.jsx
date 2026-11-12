@@ -12,15 +12,15 @@ export default function Profesionales() {
 
   useEffect(() => { profesionalesApi.listar().then(setLista).catch((e) => setError(e.message)); }, []);
 
-  // No hay endpoint de especialidades: se derivan del listado de profesionales.
+  // Las especialidades se derivan del listado de profesionales activos.
   const especialidades = useMemo(() => {
     const m = new Map();
-    (lista || []).forEach((p) => p.especialidad && m.set(p.especialidad.id, p.especialidad.nombre));
+    (lista || []).forEach((p) => p.especialidadId && m.set(p.especialidadId, p.especialidad));
     return [...m].map(([id, nombre]) => ({ id, nombre }));
   }, [lista]);
 
   const visibles = (lista || []).filter((p) =>
-    (!esp || String(p.especialidad?.id) === esp) &&
+    (!esp || String(p.especialidadId) === esp) &&
     nombreProfesional(p).toLowerCase().includes(q.toLowerCase()));
 
   return (
@@ -45,7 +45,7 @@ export default function Profesionales() {
             <Avatar nombre={nombreProfesional(p)} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-display text-lg font-medium">{nombreProfesional(p)}</p>
-              <p className="text-sm text-muted">{p.especialidad?.nombre || 'Sin especialidad'} · {p.telefono}</p>
+              <p className="text-sm text-muted">{p.especialidad || 'Sin especialidad'} · {p.telefono}</p>
             </div>
             <Link to={`/profesionales/${p.id}/reservar`} className="btn-primary">Reservar</Link>
           </li>
