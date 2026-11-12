@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { profesionalesApi, turnosApi } from '../api/services.js';
-import { useAuth } from '../context/AuthContext.jsx';
 import { DIAS_CORTOS, bloquesDelDia, diaBackend, fechaLarga, isoLocal, nombreProfesional, proximosDias } from '../lib/fechas.js';
 import { Alert, Cargando } from '../components/ui.jsx';
 
 export default function Reservar() {
   const { id } = useParams();
-  const { usuario } = useAuth();
+  const [params] = useSearchParams();
+  const reprogramarId = params.get('reprogramar'); // si viene, se reprograma ese turno en lugar de crear uno nuevo
   const navigate = useNavigate();
   const [pro, setPro] = useState(null);
   const [horarios, setHorarios] = useState(null);
@@ -35,8 +35,13 @@ export default function Reservar() {
   const confirmar = async () => {
     setError(''); setEnviando(true);
     try {
-      await turnosApi.crear({ clienteId: usuario.id, profesionalId: Number(id), fecha: isoLocal(fecha), hora, duracionMinutos: duracion });
-      navigate('/mis-turnos', { state: { reservado: true } });
+      if (reprogramarId) {
+        await turnosApi.reprogramar(reprogramarId, { fecha: isoLocal(fecha), hora, duracionMinutos: duracion });
+        navigate('/mis-turnos', { state: { reprogramado: true } });
+      } else {
+        await turnosApi.crear({ profesionalId: Number(id), fecha: isoLocal(fecha), hora, duracionMinutos: duracion });
+        navigate('/mis-turnos', { state: { reservado: true } });
+      }
     } catch (err) {
       setError(err.message);
       if (err.status === 409 || err.status === 400) { setOcupados((o) => [...o, `${isoLocal(fecha)} ${hora}`]); setHora(''); }
@@ -49,8 +54,9 @@ export default function Reservar() {
     <div className="space-y-6">
       <Link to="/profesionales" className="text-sm font-medium text-tide-dark underline">Volver a profesionales</Link>
       <div>
-        <h1 className="text-2xl font-bold">{pro ? nombreProfesional(pro) : 'Reservar turno'}</h1>
-        {pro?.especialidad && <p className="text-sm text-muted">{pro.especialidad.nombre}</p>}
+        <h1 className="text-2xl font-bold">{pro ? nombreProfesional(pro) : (reprogramarId ? 'Reprogramar turno' : 'Reservar turno')}</h1>
+        {reprogramarId && <p className="text-sm text-muted">Elegí el nuevo día y horario para tu turno.</p>}
+        {pro?.especialidad && <p className="text-sm text-muted">{pro.especialidad}</p>}
       </div>
       <Alert>{error}</Alert>
 
@@ -107,7 +113,7 @@ export default function Reservar() {
               {hora && (
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-tide-soft px-4 py-3">
                   <p className="text-sm"><strong>{hora} hs</strong>, {duracion} minutos, <span className="capitalize">{fechaLarga(isoLocal(fecha))}</span></p>
-                  <button className="btn-primary" disabled={enviando} onClick={confirmar}>{enviando ? 'Reservando…' : 'Confirmar turno'}</button>
+                  <button className="btn-primary" disabled={enviando} onClick={confirmar}>{enviando ? 'Guardando…' : (reprogramarId ? 'Confirmar nuevo horario' : 'Confirmar turno')}</button>
                 </div>
               )}
             </section>
