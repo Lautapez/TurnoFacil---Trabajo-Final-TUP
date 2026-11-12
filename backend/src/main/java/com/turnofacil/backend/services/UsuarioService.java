@@ -4,6 +4,8 @@ import com.turnofacil.backend.config.JwtUtil;
 import com.turnofacil.backend.dtos.UsuarioRegistroDTO;
 import com.turnofacil.backend.dtos.UsuarioResponseDTO;
 import com.turnofacil.backend.enums.Rol;
+import com.turnofacil.backend.exceptions.ConflictoTurnoException;
+import com.turnofacil.backend.exceptions.CredencialesInvalidasException;
 import com.turnofacil.backend.models.Usuario;
 import com.turnofacil.backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,7 +34,7 @@ public class UsuarioService implements UserDetailsService {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; // Inyectamos el Bean definido en SecurityConfig
+    private PasswordEncoder passwordEncoder; // Bean definido en SecurityConfig
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -41,7 +44,7 @@ public class UsuarioService implements UserDetailsService {
 
     public UsuarioResponseDTO registrarUsuario(UsuarioRegistroDTO dto) {
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("El email ya se encuentra registrado.");
+            throw new ConflictoTurnoException("El email ya se encuentra registrado.");
         }
 
         Usuario usuario = new Usuario();
@@ -50,7 +53,7 @@ public class UsuarioService implements UserDetailsService {
         usuario.setEmail(dto.getEmail());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        // CORRECCIÓN OBLIGATORIA: Forzamos el rol CLIENTE por defecto en el registro público
+        // El registro público SIEMPRE crea un CLIENTE. PROFESIONAL y ADMINISTRADOR los asigna un administrador.
         usuario.setRol(Rol.CLIENTE);
 
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
@@ -59,22 +62,22 @@ public class UsuarioService implements UserDetailsService {
     }
 
     public UsuarioResponseDTO login(String email, String rawPassword) {
+        Authentication authentication;
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, rawPassword)
             );
-
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = jwtUtil.generateToken(userDetails);
-
-            Usuario usuario = usuarioRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
-
-            return mapearAResponseDTO(usuario, token);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Credenciales inválidas.");
+        } catch (AuthenticationException e) {
+            throw new CredencialesInvalidasException("Credenciales inválidas.");
         }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String token = jwtUtil.generateToken(userDetails);
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new CredencialesInvalidasException("Credenciales inválidas."));
+
+        return mapearAResponseDTO(usuario, token);
     }
 
     private UsuarioResponseDTO mapearAResponseDTO(Usuario usuario, String token) {
