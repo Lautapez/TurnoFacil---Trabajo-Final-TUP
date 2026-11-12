@@ -14,9 +14,6 @@ import java.time.LocalTime;
 @AllArgsConstructor
 public class TurnoRegistroDTO {
 
-    @NotNull(message = "El ID del cliente es obligatorio")
-    private Long clienteId;
-
     @NotNull(message = "El ID del profesional es obligatorio")
     private Long profesionalId;
 
