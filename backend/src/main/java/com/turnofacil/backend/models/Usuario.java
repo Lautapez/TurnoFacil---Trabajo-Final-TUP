@@ -28,7 +28,7 @@ import java.util.List;
 @Table(name = "usuarios")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = "password")
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
