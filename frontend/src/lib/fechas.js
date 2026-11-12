@@ -44,4 +44,4 @@ export function puedeModificar(t) {
 }
 
 export const nombreProfesional = (p) =>
-  p?.usuario ? `${p.usuario.nombre} ${p.usuario.apellido}` : `Profesional #${p?.id}`;
+  p?.nombre ? `${p.nombre} ${p.apellido}` : `Profesional #${p?.id}`;
