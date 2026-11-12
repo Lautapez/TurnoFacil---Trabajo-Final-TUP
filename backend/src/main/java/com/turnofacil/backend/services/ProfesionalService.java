@@ -1,7 +1,9 @@
 package com.turnofacil.backend.services;
 
 import com.turnofacil.backend.dtos.HorarioRegistroDTO;
+import com.turnofacil.backend.dtos.HorarioResponseDTO;
 import com.turnofacil.backend.dtos.ProfesionalRegistroDTO;
+import com.turnofacil.backend.dtos.ProfesionalResponseDTO;
 import com.turnofacil.backend.enums.Rol;
 import com.turnofacil.backend.exceptions.ConflictoTurnoException;
 import com.turnofacil.backend.exceptions.RecursoNoEncontradoException;
@@ -15,10 +17,13 @@ import com.turnofacil.backend.repositories.ProfesionalRepository;
 import com.turnofacil.backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ProfesionalService {
 
     @Autowired
@@ -33,30 +38,52 @@ public class ProfesionalService {
     @Autowired
     private EspecialidadRepository especialidadRepository;
 
-    /**
-     * Obtiene el listado general de profesionales activos (GET /api/professionals).
-     */
-    public List<Profesional> listarProfesionalesActivos() {
-        return profesionalRepository.findByActivoTrue();
+    /** Profesionales activos (GET /api/professionals). */
+    @Transactional(readOnly = true)
+    public List<ProfesionalResponseDTO> listarProfesionalesActivos() {
+        return profesionalRepository.findByActivoTrue().stream()
+                .map(ProfesionalResponseDTO::from).collect(Collectors.toList());
+    }
+
+    /** Profesionales activos de una especialidad. */
+    @Transactional(readOnly = true)
+    public List<ProfesionalResponseDTO> listarPorEspecialidad(Long especialidadId) {
+        return profesionalRepository.findByEspecialidadIdAndActivoTrue(especialidadId).stream()
+                .map(ProfesionalResponseDTO::from).collect(Collectors.toList());
+    }
+
+    /** Todos los profesionales, activos e inactivos (módulo administrativo). */
+    @Transactional(readOnly = true)
+    public List<ProfesionalResponseDTO> listarTodos() {
+        return profesionalRepository.findAll().stream()
+                .map(ProfesionalResponseDTO::from).collect(Collectors.toList());
+    }
+
+    /** Perfil profesional del usuario autenticado (incluso si está dado de baja). */
+    @Transactional(readOnly = true)
+    public ProfesionalResponseDTO obtenerPerfilDe(Usuario actual) {
+        return profesionalRepository.findByUsuarioId(actual.getId())
+                .map(ProfesionalResponseDTO::from)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Todavía no tenés un perfil profesional. Un administrador debe crearlo."));
     }
 
     /**
-     * Filtra profesionales por ID de especialidad.
+     * Alta del perfil profesional (solo ADMINISTRADOR). El usuario debe tener rol PROFESIONAL,
+     * asignado previamente por un administrador (RN-05: un CLIENTE no puede ser profesional).
      */
-    public List<Profesional> listarPorEspecialidad(Long especialidadId) {
-        return profesionalRepository.findByEspecialidadId(especialidadId);
-    }
-
-    /**
-     * Permite guardar/dar de alta un nuevo profesional mediante DTO (POST /api/professionals).
-     */
-    public Profesional guardarProfesionalDTO(ProfesionalRegistroDTO dto) {
+    public ProfesionalResponseDTO guardarProfesionalDTO(ProfesionalRegistroDTO dto) {
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con ID: " + dto.getUsuarioId()));
 
-        // Blindaje RN-05: Un usuario con rol CLIENTE no puede registrarse como profesional
-        if (usuario.getRol() == Rol.CLIENTE) {
-            throw new ConflictoTurnoException("Acceso denegado: Un usuario con rol CLIENTE no puede realizar esta acción.");
+        if (usuario.getRol() != Rol.PROFESIONAL) {
+            throw new ConflictoTurnoException(
+                    "El usuario debe tener rol PROFESIONAL para crear su perfil profesional (RN-05). "
+                            + "Un administrador debe asignarle ese rol primero.");
+        }
+
+        if (profesionalRepository.existsByUsuarioId(usuario.getId())) {
+            throw new ConflictoTurnoException("El usuario ya tiene un perfil profesional.");
         }
 
         Especialidad especialidad = especialidadRepository.findById(dto.getEspecialidadId())
@@ -68,22 +95,12 @@ public class ProfesionalService {
         profesional.setTelefono(dto.getTelefono());
         profesional.setActivo(true);
 
-        return profesionalRepository.save(profesional);
+        return ProfesionalResponseDTO.from(profesionalRepository.save(profesional));
     }
 
-    /**
-     * Método clásico compatible por si se usa internamente en otra capa.
-     */
-    public Profesional guardarProfesional(Profesional profesional) {
-        return profesionalRepository.save(profesional);
-    }
-
-    /**
-     * Realiza la baja lógica de un profesional cambiando su estado activo a false.
-     */
+    /** Baja lógica de un profesional (solo ADMINISTRADOR). */
     public void darDeBajaProfesional(Long id) {
-        Profesional profesional = profesionalRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Profesional no encontrado con ID: " + id));
+        Profesional profesional = obtener(id);
 
         if (!profesional.getActivo()) {
             throw new ConflictoTurnoException("El profesional ya se encuentra inactivo.");
@@ -93,26 +110,39 @@ public class ProfesionalService {
         profesionalRepository.save(profesional);
     }
 
-    /**
-     * Consulta las franjas horarias configuradas para un profesional (GET /api/professionals/{id}/availability).
-     */
-    public List<Horario> obtenerHorariosPorProfesional(Long profesionalId) {
-        return horarioRepository.findByProfesionalId(profesionalId);
+    /** Reactiva un profesional dado de baja (solo ADMINISTRADOR). */
+    public void reactivarProfesional(Long id) {
+        Profesional profesional = obtener(id);
+
+        if (profesional.getActivo()) {
+            throw new ConflictoTurnoException("El profesional ya se encuentra activo.");
+        }
+
+        profesional.setActivo(true);
+        profesionalRepository.save(profesional);
+    }
+
+    /** Franjas horarias de un profesional (GET /api/professionals/{id}/availability). */
+    @Transactional(readOnly = true)
+    public List<HorarioResponseDTO> obtenerHorariosPorProfesional(Long profesionalId) {
+        return horarioRepository.findByProfesionalId(profesionalId).stream()
+                .map(HorarioResponseDTO::from).collect(Collectors.toList());
     }
 
     /**
-     * Permite configurar y guardar una nueva franja horaria mediante DTO (POST /api/professionals/availability).
+     * Carga una franja horaria en la agenda del profesional AUTENTICADO. El profesional
+     * se obtiene del token: nadie puede cargar horarios en la agenda de otra persona.
      */
-    public Horario guardarHorarioDTO(HorarioRegistroDTO dto) {
-        Profesional profesional = profesionalRepository.findById(dto.getProfesionalId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Profesional no encontrado con ID: " + dto.getProfesionalId()));
+    public HorarioResponseDTO guardarHorarioDTO(HorarioRegistroDTO dto, Usuario actual) {
+        Profesional profesional = profesionalRepository.findByUsuarioId(actual.getId())
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Todavía no tenés un perfil profesional. Un administrador debe crearlo."));
 
-        // Blindaje RN-05: Verificar que el usuario asociado no sea un CLIENTE intentando configurar agendas
-        if (profesional.getUsuario() != null && profesional.getUsuario().getRol() == Rol.CLIENTE) {
-            throw new ConflictoTurnoException("Acceso denegado: Un usuario con rol CLIENTE no puede configurar ni modificar agendas profesionales.");
+        if (!Boolean.TRUE.equals(profesional.getActivo())) {
+            throw new ConflictoTurnoException("Tu perfil profesional está inactivo y no puede modificar la agenda.");
         }
 
-        // Validación de lógica: la hora de fin debe ser posterior a la hora de inicio
+        // La hora de fin debe ser posterior a la hora de inicio
         if (!dto.getHoraFin().isAfter(dto.getHoraInicio())) {
             throw new ConflictoTurnoException("La hora de fin debe ser posterior a la hora de inicio.");
         }
@@ -123,13 +153,11 @@ public class ProfesionalService {
         horario.setHoraInicio(dto.getHoraInicio());
         horario.setHoraFin(dto.getHoraFin());
 
-        return horarioRepository.save(horario);
+        return HorarioResponseDTO.from(horarioRepository.save(horario));
     }
 
-    /**
-     * Método clásico compatible.
-     */
-    public Horario guardarHorario(Horario horario) {
-        return horarioRepository.save(horario);
+    private Profesional obtener(Long id) {
+        return profesionalRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Profesional no encontrado con ID: " + id));
     }
 }
