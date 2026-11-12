@@ -34,6 +34,7 @@ export default function MisTurnos() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Mis turnos</h1>
       <Alert tone="ok">{state?.reservado && 'Turno reservado. Queda pendiente de confirmación.'}</Alert>
+      <Alert tone="ok">{state?.reprogramado && 'Turno reprogramado. Queda pendiente de confirmación.'}</Alert>
       <Alert>{error}</Alert>
       <div className="flex gap-2" role="tablist">
         {[['proximos', `Próximos (${proximos.length})`], ['historial', 'Historial']].map(([k, t]) => (
@@ -61,7 +62,7 @@ export default function MisTurnos() {
                 {(t.estado === 'PENDIENTE' || t.estado === 'CONFIRMADO') && (
                   editable ? (
                     <>
-                      <Link to={`/profesionales/${t.profesionalId}/reservar`} className="btn-ghost">Reprogramar</Link>
+                      <Link to={`/profesionales/${t.profesionalId}/reservar?reprogramar=${t.id}`} className="btn-ghost">Reprogramar</Link>
                       <button className="btn-danger" onClick={() => setACancelar(t)}>Cancelar</button>
                     </>
                   ) : <span className="text-xs text-muted">Ya no se puede modificar (falta menos de 2 h)</span>
@@ -71,10 +72,6 @@ export default function MisTurnos() {
           );
         })}
       </ul>
-      {turnos && proximos.some(puedeModificar) && (
-        <p className="text-xs text-muted">Para reprogramar, reservá el nuevo horario y luego cancelá el turno anterior. Se puede cancelar hasta 2 horas antes.</p>
-      )}
-
       {aCancelar && (
         <div className="fixed inset-0 z-10 grid place-items-center bg-ink/50 px-4" role="dialog" aria-modal="true" aria-labelledby="t-cancel">
           <div className="panel w-full max-w-sm space-y-4">
