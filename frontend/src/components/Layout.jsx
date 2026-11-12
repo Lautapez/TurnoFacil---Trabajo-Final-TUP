@@ -4,11 +4,11 @@ import { useAuth } from '../context/AuthContext.jsx';
 export default function Layout() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
-  const esPro = usuario?.rol === 'PROFESIONAL' || usuario?.rol === 'ADMINISTRADOR';
-
-  const links = esPro
-    ? [['/panel', 'Panel']]
-    : [['/profesionales', 'Profesionales'], ['/mis-turnos', 'Mis turnos']];
+  const links = usuario?.rol === 'ADMINISTRADOR'
+    ? [['/admin', 'Administración']]
+    : usuario?.rol === 'PROFESIONAL'
+      ? [['/panel', 'Panel']]
+      : [['/profesionales', 'Profesionales'], ['/mis-turnos', 'Mis turnos']];
 
   const cls = ({ isActive }) =>
     `rounded-md px-3 py-1.5 text-sm font-medium ${isActive ? 'bg-tide-soft text-tide-dark' : 'text-muted hover:text-ink'}`;
