@@ -1,5 +1,6 @@
 package com.turnofacil.backend.repositories;
 
+import com.turnofacil.backend.enums.Rol;
 import com.turnofacil.backend.models.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     // Método para buscar un usuario por su email (utilizado en el login)
     Optional<Usuario> findByEmail(String email);
+
+    long countByRol(Rol rol);
 }
