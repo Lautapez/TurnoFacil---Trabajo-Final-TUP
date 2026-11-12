@@ -7,9 +7,6 @@ import java.time.LocalTime;
 
 public class HorarioRegistroDTO {
 
-    @NotNull(message = "El ID del profesional es obligatorio")
-    private Long profesionalId;
-
     @NotNull(message = "El día de la semana es obligatorio")
     @Min(value = 1, message = "El día de la semana debe ser entre 1 (Lunes) y 7 (Domingo)")
     @Max(value = 7, message = "El día de la semana debe ser entre 1 (Lunes) y 7 (Domingo)")
@@ -22,9 +19,6 @@ public class HorarioRegistroDTO {
     private LocalTime horaFin;
 
     // Getters y Setters
-    public Long getProfesionalId() { return profesionalId; }
-    public void setProfesionalId(Long profesionalId) { this.profesionalId = profesionalId; }
-
     public Integer getDiaSemana() { return diaSemana; }
     public void setDiaSemana(Integer diaSemana) { this.diaSemana = diaSemana; }
 
