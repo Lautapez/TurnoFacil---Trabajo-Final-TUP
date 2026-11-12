@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+// Los errores los resuelve GlobalExceptionHandler (409 email duplicado, 401 credenciales, 400 validación)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -17,23 +18,14 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
+    // Registro público: siempre crea un CLIENTE
     @PostMapping("/register")
-    public ResponseEntity<?> registrar(@Valid @RequestBody UsuarioRegistroDTO dto) {
-        try {
-            UsuarioResponseDTO nuevoUsuario = usuarioService.registrarUsuario(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<UsuarioResponseDTO> registrar(@Valid @RequestBody UsuarioRegistroDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrarUsuario(dto));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginDTO loginRequest) {
-        try {
-            UsuarioResponseDTO usuario = usuarioService.login(loginRequest.getEmail(), loginRequest.getPassword());
-            return ResponseEntity.ok(usuario);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-        }
+    public ResponseEntity<UsuarioResponseDTO> login(@Valid @RequestBody LoginDTO loginRequest) {
+        return ResponseEntity.ok(usuarioService.login(loginRequest.getEmail(), loginRequest.getPassword()));
     }
 }
