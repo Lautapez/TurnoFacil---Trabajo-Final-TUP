@@ -147,6 +147,13 @@ function Agenda({ activo }) {
     finally { setEnviando(false); }
   };
 
+  const eliminar = async (h) => {
+    if (!window.confirm(`¿Eliminar la franja ${hhmm(h.horaInicio)} a ${hhmm(h.horaFin)}? Los turnos ya reservados no se cancelan.`)) return;
+    setError(''); setOk('');
+    try { await profesionalesApi.eliminarHorario(h.id); setOk('Franja eliminada.'); await cargar(perfilId); }
+    catch (err) { setError(err.message); }
+  };
+
   const porDia = (d) => (horarios || []).filter((h) => h.diaSemana === d).sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
 
   return (
@@ -174,9 +181,17 @@ function Agenda({ activo }) {
             {DIAS.slice(1).map((d, i) => (
               <li key={d} className="flex items-center justify-between gap-3 py-2.5 text-sm">
                 <span className="font-medium">{d}</span>
-                <span className={porDia(i + 1).length ? '' : 'text-muted'}>
-                  {porDia(i + 1).length ? porDia(i + 1).map((h) => `${hhmm(h.horaInicio)} a ${hhmm(h.horaFin)}`).join(' y ') : 'No atiende'}
-                </span>
+                {porDia(i + 1).length === 0 ? <span className="text-muted">No atiende</span> : (
+                  <span className="flex flex-wrap items-center justify-end gap-2">
+                    {porDia(i + 1).map((h) => (
+                      <span key={h.id} className="inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1">
+                        {hhmm(h.horaInicio)} a {hhmm(h.horaFin)}
+                        <button type="button" aria-label={`Eliminar franja ${hhmm(h.horaInicio)} a ${hhmm(h.horaFin)} del ${d}`}
+                          className="text-muted hover:text-red-600" disabled={!activo} onClick={() => eliminar(h)}>×</button>
+                      </span>
+                    ))}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
