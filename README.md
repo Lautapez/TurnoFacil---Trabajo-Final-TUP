@@ -2,7 +2,7 @@
 
 > **Trabajo Final Integrador (TFI)**
 > 🎓 **Carrera:** Tecnicatura Universitaria en Programación (TUP) — UTN
-> 👥 **Equipo:** Gabriel Carbajal, Cristian Paolucci, Lautaro Pez
+> 👥 **Equipo:** Cristian Paolucci, Lautaro Pez, Gabriel Carbajal
 > 👩‍🏫 **Tutora:** Sofía Raia
 
 ---
@@ -259,7 +259,7 @@ El sistema implementa de forma lógica y transaccional las siguientes reglas de 
 * **RN-01: Disponibilidad horaria obligatoria**  
   Un cliente no puede reservar un turno fuera de la franja horaria y los días de la semana configurados previamente por el profesional en su agenda.
 * **RN-02: Prevención de superposición de agendas**
-  Un profesional no puede tener dos turnos no cancelados (`PENDIENTE`, `CONFIRMADO` o `FINALIZADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha. La base de datos garantiza esta regla     mediante la restricción de exclusión `no_solapamiento_turnos`, que compara los rangos horarios de los turnos y excluye únicamente los registros en estado `CANCELADO`.
+  Un profesional no puede tener dos turnos no cancelados (`PENDIENTE`, `CONFIRMADO` o `FINALIZADO`) cuyos intervalos horarios se superpongan parcial o totalmente en una misma fecha. El backend lo valida por rango (inicio y duración) antes de guardar y devuelve un mensaje claro; la restricción de exclusión `no_solapamiento_turnos` de la base de datos actúa como última barrera ante reservas concurrentes y excluye únicamente los registros en estado `CANCELADO`.
 * **RN-03: Liberación automática de horarios**  
   Un turno que adquiere el estado `CANCELADO` libera de forma automática el bloque horario correspondiente, permitiendo que el espacio vuelva a estar disponible para nuevas reservas de cualquier cliente.
 * **RN-04: Restricciones de cancelación y reprogramación**
@@ -568,63 +568,63 @@ El proyecto adopta una **arquitectura desacoplada de tres capas lógicas**:
 
 ## 🔌 Contratos de API REST
 
-### 🔐 Autenticación y Usuarios
+Todos los endpoints, salvo `/api/auth/**`, exigen el header `Authorization: Bearer <token>`. Sin token la API responde `401`; con un rol insuficiente o sobre un recurso ajeno responde `403`.
 
-```http
-POST /api/auth/register
-```
+El registro público **siempre crea un `CLIENTE`**. Los roles `PROFESIONAL` y `ADMINISTRADOR` los asigna un administrador desde el módulo administrativo. El primer administrador se crea al arrancar el backend con las variables de entorno `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
 
-Registro de nuevos usuarios.
+### ⚙️ Variables de entorno del backend
 
-```http
-POST /api/auth/login
-```
+| Variable | Obligatoria | Descripción |
+| :--- | :---: | :--- |
+| `JWT_SECRET` | Sí | Secreto de firma de los tokens (mínimo 32 caracteres). Sin ella la aplicación no arranca. |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | No | Conexión a PostgreSQL (hay valores por defecto para desarrollo local). |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | No | Crean el primer usuario `ADMINISTRADOR` si no existe. |
+| `JWT_EXPIRATION` | No | Vigencia del token en milisegundos (por defecto 24 h). |
 
-Autenticación y generación del token seguro **JWT**.
+### 🔐 Autenticación
 
----
+| Método | Endpoint | Acceso | Descripción |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/auth/register` | Público | Registro de un `CLIENTE` (el body no lleva rol). |
+| POST | `/api/auth/login` | Público | Devuelve los datos del usuario y el token **JWT**. |
 
-### 🩺 Profesionales y Agendas
+### 🩺 Profesionales, especialidades y agendas
 
-```http
-GET /api/professionals
-```
-
-Obtiene el listado general de profesionales disponibles.
-
-```http
-GET /api/professionals/{id}/availability
-```
-
-Consulta los horarios disponibles de un profesional en una fecha determinada.
-
-```http
-POST /api/professionals/availability
-```
-
-Permite configurar las franjas horarias disponibles del profesional.
-
----
+| Método | Endpoint | Acceso | Descripción |
+| :--- | :--- | :--- | :--- |
+| GET | `/api/professionals` | Autenticado | Profesionales activos (DTO, sin datos sensibles). Filtro opcional `?especialidadId=`. |
+| GET | `/api/professionals/me` | `PROFESIONAL` | Perfil profesional del usuario autenticado. |
+| POST | `/api/professionals` | `ADMINISTRADOR` | Crea el perfil de un usuario que ya tiene rol `PROFESIONAL`. |
+| PUT | `/api/professionals/{id}/deactivate` | `ADMINISTRADOR` | Baja lógica. |
+| PUT | `/api/professionals/{id}/activate` | `ADMINISTRADOR` | Reactivación. |
+| GET | `/api/professionals/{id}/availability` | Autenticado | Franjas horarias semanales del profesional. |
+| POST | `/api/professionals/availability` | `PROFESIONAL` | Carga una franja en la agenda **del profesional autenticado** (se toma del token). |
+| DELETE | `/api/professionals/availability/{id}` | `PROFESIONAL` | Elimina una franja **propia** de la agenda (los turnos ya reservados no se tocan). |
+| GET | `/api/specialties` | Autenticado | Lista de especialidades. |
+| POST | `/api/specialties` | `ADMINISTRADOR` | Crea una especialidad. |
 
 ### 📅 Gestión de Turnos
 
-```http
-POST /api/appointments
-```
+| Método | Endpoint | Acceso | Descripción |
+| :--- | :--- | :--- | :--- |
+| POST | `/api/appointments` | `CLIENTE` | Reserva para el cliente del token (RN-01, RN-02, RN-03, profesional activo). |
+| GET | `/api/appointments/user/{id}` | El propio usuario o `ADMINISTRADOR` | Historial de turnos de un cliente. |
+| GET | `/api/appointments/professional/{id}` | El propio profesional o `ADMINISTRADOR` | Agenda del profesional (HU04). |
+| PUT | `/api/appointments/{id}/cancel` | Cliente dueño, profesional del turno o `ADMINISTRADOR` | Cancelación lógica (RN-04). |
+| PUT | `/api/appointments/{id}/reschedule` | Cliente dueño, profesional del turno o `ADMINISTRADOR` | Reprogramación (RN-04); el turno vuelve a `PENDIENTE`. |
+| PUT | `/api/appointments/{id}/confirm` | Profesional del turno o `ADMINISTRADOR` | `PENDIENTE` → `CONFIRMADO`. |
+| PUT | `/api/appointments/{id}/finish` | Profesional del turno o `ADMINISTRADOR` | `CONFIRMADO` → `FINALIZADO`. |
 
-Solicita y bloquea un nuevo turno.
+### 🛠️ Módulo administrativo (`ADMINISTRADOR`)
 
-```http
-GET /api/appointments/user/{id}
-```
-
-Obtiene el historial de turnos de un cliente.
-
-```http
-PUT /api/appointments/{id}/cancel
-```
-
-Realiza la cancelación lógica de un turno.
+| Método | Endpoint | Descripción |
+| :--- | :--- | :--- |
+| GET | `/api/admin/dashboard` | Métricas: usuarios por rol, profesionales activos y turnos por estado. |
+| GET | `/api/admin/users` | Lista de usuarios. |
+| PUT | `/api/admin/users/{id}/role` | Asigna un rol (`CLIENTE`, `PROFESIONAL`, `ADMINISTRADOR`). |
+| PUT | `/api/admin/users/{id}/status` | Activa o desactiva una cuenta. |
+| GET | `/api/admin/professionals` | Todos los profesionales, activos e inactivos. |
+| GET | `/api/admin/appointments` | Todos los turnos; filtro opcional `?fecha=yyyy-MM-dd`. |
 
 ---
 
