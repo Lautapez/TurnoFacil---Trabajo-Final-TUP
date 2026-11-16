@@ -85,6 +85,7 @@ class SeguridadPorRolTest {
     void clienteNoPuedeCargarHorariosNiCrearPerfiles() {
         Usuario u = usuario(Rol.CLIENTE);
         assertThrows(AccessDeniedException.class, () -> profesionalController.guardarHorario(new HorarioRegistroDTO(), u));
+        assertThrows(AccessDeniedException.class, () -> profesionalController.eliminarHorario(1L, u));
         assertThrows(AccessDeniedException.class, () -> profesionalController.crearProfesional(new ProfesionalRegistroDTO()));
     }
 
@@ -131,6 +132,7 @@ class SeguridadPorRolTest {
         assertDoesNotThrow(() -> turnoController.listarTurnosPorProfesional(1L, u));
         assertDoesNotThrow(() -> profesionalController.guardarHorario(new HorarioRegistroDTO(), u));
         assertDoesNotThrow(() -> profesionalController.miPerfil(u));
+        assertDoesNotThrow(() -> profesionalController.eliminarHorario(1L, u));
     }
 
     // ------------------------------------------------------------ ADMINISTRADOR
