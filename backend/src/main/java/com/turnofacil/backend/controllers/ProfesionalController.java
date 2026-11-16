@@ -70,6 +70,14 @@ public class ProfesionalController {
         return ResponseEntity.ok(profesionalService.obtenerHorariosPorProfesional(id));
     }
 
+    // DELETE /api/professionals/availability/{id} -> Elimina una franja de la agenda del profesional autenticado
+    @PreAuthorize("hasRole('PROFESIONAL')")
+    @DeleteMapping("/availability/{id}")
+    public ResponseEntity<Void> eliminarHorario(@PathVariable Long id, @AuthenticationPrincipal Usuario actual) {
+        profesionalService.eliminarHorario(id, actual);
+        return ResponseEntity.noContent().build();
+    }
+
     // POST /api/professionals/availability -> Carga una franja en la agenda del profesional autenticado
     @PreAuthorize("hasRole('PROFESIONAL')")
     @PostMapping("/availability")
