@@ -156,6 +156,24 @@ public class ProfesionalService {
         return HorarioResponseDTO.from(horarioRepository.save(horario));
     }
 
+    /**
+     * Elimina una franja horaria de la agenda del profesional AUTENTICADO. Solo puede borrar
+     * franjas propias. Los turnos ya reservados no se tocan: solo deja de ofrecerse ese horario.
+     */
+    public void eliminarHorario(Long horarioId, Usuario actual) {
+        Horario horario = horarioRepository.findById(horarioId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Franja horaria no encontrada con ID: " + horarioId));
+
+        Profesional duenio = horario.getProfesional();
+        if (duenio == null || duenio.getUsuario() == null
+                || !java.util.Objects.equals(duenio.getUsuario().getId(), actual.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "La franja horaria no pertenece al usuario autenticado.");
+        }
+
+        horarioRepository.delete(horario);
+    }
+
     private Profesional obtener(Long id) {
         return profesionalRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Profesional no encontrado con ID: " + id));
