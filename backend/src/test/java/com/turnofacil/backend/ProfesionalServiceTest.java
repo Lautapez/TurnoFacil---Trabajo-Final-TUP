@@ -155,6 +155,37 @@ public class ProfesionalServiceTest {
     }
 
     @Test
+    @DisplayName("El profesional puede eliminar una franja propia")
+    void eliminaFranjaPropia() {
+        Usuario actual = usuario(2L, Rol.PROFESIONAL);
+        Profesional propio = new Profesional();
+        propio.setId(7L);
+        propio.setUsuario(actual);
+        Horario h = new Horario();
+        h.setProfesional(propio);
+        when(horarioRepository.findById(9L)).thenReturn(Optional.of(h));
+
+        profesionalService.eliminarHorario(9L, actual);
+
+        verify(horarioRepository).delete(h);
+    }
+
+    @Test
+    @DisplayName("No se puede eliminar una franja de otro profesional")
+    void noEliminaFranjaAjena() {
+        Profesional ajeno = new Profesional();
+        ajeno.setId(8L);
+        ajeno.setUsuario(usuario(3L, Rol.PROFESIONAL));
+        Horario h = new Horario();
+        h.setProfesional(ajeno);
+        when(horarioRepository.findById(9L)).thenReturn(Optional.of(h));
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> profesionalService.eliminarHorario(9L, usuario(2L, Rol.PROFESIONAL)));
+        verify(horarioRepository, never()).delete(any());
+    }
+
+    @Test
     @DisplayName("La hora de fin debe ser posterior a la de inicio")
     void horarioFinAnteriorAInicio() {
         Usuario actual = usuario(2L, Rol.PROFESIONAL);
