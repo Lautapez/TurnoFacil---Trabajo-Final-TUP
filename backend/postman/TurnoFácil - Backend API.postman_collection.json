@@ -2,69 +2,521 @@
   "info": {
     "_postman_id": "7d0b72b5-c27b-4abb-a5e4-75e5dfc40e92",
     "name": "TurnoFácil - Backend API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "57460069",
-    "_collection_link": "https://go.postman.co/collection/57460069-7d0b72b5-c27b-4abb-a5e4-75e5dfc40e92?source=collection_link"
+    "description": "Flujo sugerido: 1) iniciar sesión como ADMIN (variables adminEmail/adminPassword = ADMIN_EMAIL/ADMIN_PASSWORD del backend); 2) crear especialidad; 3) registrar un usuario, asignarle el rol PROFESIONAL y crear su perfil; 4) iniciar sesión como ese profesional y cargar horarios; 5) registrar/iniciar sesión como cliente y reservar. Cada login guarda el token en la variable `token`, que se envía como Bearer en todos los requests (salvo registro y login).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@turnofacil.com"
+    },
+    {
+      "key": "adminPassword",
+      "value": "cambiar-esta-clave"
+    },
+    {
+      "key": "proEmail",
+      "value": "profesional@test.com"
+    },
+    {
+      "key": "proPassword",
+      "value": "password123"
+    },
+    {
+      "key": "clienteEmail",
+      "value": "maria@test.com"
+    },
+    {
+      "key": "clientePassword",
+      "value": "password123"
+    },
+    {
+      "key": "admin_id",
+      "value": ""
+    },
+    {
+      "key": "pro_id",
+      "value": ""
+    },
+    {
+      "key": "cliente_id",
+      "value": ""
+    },
+    {
+      "key": "profesionalId",
+      "value": "1"
+    },
+    {
+      "key": "turnoId",
+      "value": "1"
+    },
+    {
+      "key": "fecha",
+      "value": "2026-11-16"
+    }
+  ],
   "item": [
     {
       "name": "1. Autenticación",
       "item": [
         {
-          "name": "Registrar Usuario",
+          "name": "Registrar cliente",
           "request": {
             "method": "POST",
             "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"María\",\n  \"apellido\": \"Pérez\",\n  \"email\": \"maria@test.com\",\n  \"password\": \"password123\",\n  \"rol\": \"CLIENTE\"\n}",
+              "raw": "{\n  \"nombre\": \"María\",\n  \"apellido\": \"Pérez\",\n  \"email\": \"{{clienteEmail}}\",\n  \"password\": \"{{clientePassword}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "El registro público siempre crea un CLIENTE: el body no lleva rol."
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar usuario (futuro profesional)",
+          "request": {
+            "method": "POST",
+            "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/auth/register",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/auth/register",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8080",
               "path": [
                 "api",
                 "auth",
                 "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Díaz\",\n  \"email\": \"{{proEmail}}\",\n  \"password\": \"{{proPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login ADMINISTRADOR",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('admin', j.token);",
+                  "  pm.collectionVariables.set('admin_id', j.id);",
+                  "  pm.collectionVariables.set('token', j.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login PROFESIONAL",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{proEmail}}\",\n  \"password\": \"{{proPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('pro', j.token);",
+                  "  pm.collectionVariables.set('pro_id', j.id);",
+                  "  pm.collectionVariables.set('token', j.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login CLIENTE",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clienteEmail}}\",\n  \"password\": \"{{clientePassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('cliente', j.token);",
+                  "  pm.collectionVariables.set('cliente_id', j.id);",
+                  "  pm.collectionVariables.set('token', j.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Administración (token ADMINISTRADOR)",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "dashboard"
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Iniciar Sesión",
+          "name": "Listar usuarios",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Asignar rol PROFESIONAL",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/{{pro_id}}/role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{pro_id}}",
+                "role"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"maria@test.com\",\n  \"password\": \"password123\"\n}",
+              "raw": "{\n  \"rol\": \"PROFESIONAL\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            },
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activar/desactivar usuario",
+          "request": {
+            "method": "PUT",
+            "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/auth/login",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/admin/users/{{pro_id}}/status",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8080",
               "path": [
                 "api",
-                "auth",
-                "login"
+                "admin",
+                "users",
+                "{{pro_id}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear especialidad",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialties"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Odontología\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear perfil profesional",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/professionals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "professionals"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuarioId\": \"{{pro_id}}\",\n  \"especialidadId\": 1,\n  \"telefono\": \"2235551234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos los profesionales",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/professionals",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "professionals"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dar de baja profesional",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/professionals/{{profesionalId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "professionals",
+                "{{profesionalId}}",
+                "deactivate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reactivar profesional",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/professionals/{{profesionalId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "professionals",
+                "{{profesionalId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos los turnos (por fecha)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/appointments?fecha={{fecha}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "appointments"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "{{fecha}}"
+                }
               ]
             }
           },
@@ -73,20 +525,18 @@
       ]
     },
     {
-      "name": "2. Profesionales",
+      "name": "3. Profesionales y agenda",
       "item": [
         {
-          "name": "Listar Profesionales",
+          "name": "Listar profesionales activos",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/professionals",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/professionals",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8080",
               "path": [
                 "api",
                 "professionals"
@@ -94,39 +544,114 @@
             }
           },
           "response": []
-        }
-      ]
-    },
-    {
-      "name": "3. Disponibilidad",
-      "item": [
+        },
         {
-          "name": "Configurar Disponibilidad",
+          "name": "Listar por especialidad",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/professionals?especialidadId=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "professionals"
+              ],
+              "query": [
+                {
+                  "key": "especialidadId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar especialidades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/specialties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "specialties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mi perfil (token PROFESIONAL)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/professionals/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "professionals",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver disponibilidad",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/professionals/{{profesionalId}}/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "professionals",
+                "{{profesionalId}}",
+                "availability"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Configurar disponibilidad (token PROFESIONAL)",
           "request": {
             "method": "POST",
             "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/professionals/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "professionals",
+                "availability"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"profesionalId\": 1,\n  \"diaSemana\": 1,\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"17:00:00\"\n}",
+              "raw": "{\n  \"diaSemana\": 1,\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"13:00:00\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "url": {
-              "raw": "http://localhost:8080/api/professionals/availability",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "8080",
-              "path": [
-                "api",
-                "professionals",
-                "availability"
-              ]
-            }
+            "description": "El profesional sale del token; no se envía profesionalId. diaSemana: 1 = lunes ... 7 = domingo."
           },
           "response": []
         }
@@ -136,29 +661,157 @@
       "name": "4. Turnos",
       "item": [
         {
-          "name": "Crear Turno",
+          "name": "Crear turno (token CLIENTE)",
           "request": {
             "method": "POST",
             "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"clienteId\": 1,\n  \"profesionalId\": 1,\n  \"fechaHora\": \"2026-11-01T10:00:00\"\n}",
+              "raw": "{\n  \"profesionalId\": \"{{profesionalId}}\",\n  \"fecha\": \"{{fecha}}\",\n  \"hora\": \"10:00:00\",\n  \"duracionMinutos\": 30\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
+            "description": "El cliente sale del token. La fecha debe caer en un día con franja (RN-01)."
+          },
+          "response": []
+        },
+        {
+          "name": "Historial del cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "http://localhost:8080/api/appointments",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/api/appointments/user/{{cliente_id}}",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8080",
               "path": [
                 "api",
-                "appointments"
+                "appointments",
+                "user",
+                "{{cliente_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agenda del profesional (token PROFESIONAL)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/professional/{{profesionalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "professional",
+                "{{profesionalId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirmar turno (token PROFESIONAL)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{turnoId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{turnoId}}",
+                "confirm"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Finalizar turno (token PROFESIONAL)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{turnoId}}/finish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{turnoId}}",
+                "finish"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reprogramar turno (token CLIENTE)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{turnoId}}/reschedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{turnoId}}",
+                "reschedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fecha\": \"{{fecha}}\",\n  \"hora\": \"11:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar turno (token CLIENTE)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{turnoId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{turnoId}}",
+                "cancel"
               ]
             }
           },
