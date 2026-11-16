@@ -22,6 +22,7 @@ export const profesionalesApi = {
   activar: (id) => request(`/professionals/${id}/activate`, { method: 'PUT' }),
   horarios: (id) => request(`/professionals/${id}/availability`),
   // El profesional se identifica por el token: el body no lleva profesionalId
+  eliminarHorario: (id) => request(`/professionals/availability/${id}`, { method: 'DELETE' }),
   guardarHorario: (dto) => request('/professionals/availability', { method: 'POST', body: dto }),
 };
 
