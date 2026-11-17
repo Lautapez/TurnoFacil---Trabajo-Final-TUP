@@ -166,7 +166,7 @@ El siguiente DDL representa la estructura utilizada para la base de datos Postgr
 ```SQL
 -- 1. Tabla de Usuarios (Centraliza la autenticación y control de accesos)
 CREATE TABLE usuarios (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
@@ -178,15 +178,15 @@ CREATE TABLE usuarios (
 
 -- 2. Tabla de Especialidades (Normalización)
 CREATE TABLE especialidades (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL UNIQUE
 );
 
 -- 3. Tabla de Profesionales
 CREATE TABLE profesionales (
-    id SERIAL PRIMARY KEY,
-    usuario_id INT NOT NULL UNIQUE,
-    especialidad_id INT NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id BIGINT NOT NULL UNIQUE,
+    especialidad_id BIGINT NOT NULL,
     telefono VARCHAR(30) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_profesional_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
@@ -195,8 +195,8 @@ CREATE TABLE profesionales (
 
 -- 4. Tabla de Horarios (Disponibilidad semanal configurada por el profesional)
 CREATE TABLE horarios (
-    id SERIAL PRIMARY KEY,
-    profesional_id INT NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    profesional_id BIGINT NOT NULL,
     dia_semana INT NOT NULL CHECK (dia_semana BETWEEN 1 AND 7), -- 1: Lunes, 7: Domingo
     hora_inicio TIME NOT NULL,
     hora_fin TIME NOT NULL,
@@ -208,9 +208,9 @@ CREATE TABLE horarios (
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE turnos (
-    id SERIAL PRIMARY KEY,
-    usuario_id INT NOT NULL, -- Cliente
-    profesional_id INT NOT NULL, -- Profesional
+    id BIGSERIAL PRIMARY KEY,
+    usuario_id BIGINT NOT NULL, -- Cliente
+    profesional_id BIGINT NOT NULL, -- Profesional
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
     duracion_minutos INT NOT NULL DEFAULT 30, -- Duración del turno en minutos
