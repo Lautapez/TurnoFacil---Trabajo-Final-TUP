@@ -1,0 +1,210 @@
+### ============================================================
+### Pruebas de la API de TurnoFácil (cliente HTTP de IntelliJ)
+### Ejecutar los pedidos de ARRIBA hacia ABAJO, uno por uno (botón verde a la izquierda).
+### Cada pedido guarda datos (token, ids) que usan los siguientes.
+### ============================================================
+### ANTES DE EMPEZAR: poner acá los mismos valores de ADMIN_EMAIL y ADMIN_PASSWORD
+### que cargaste en las variables de entorno de IntelliJ.
+
+@baseUrl = http://localhost:8080
+@adminEmail = admin@turnofacil.com
+@adminPassword = Admin12345
+
+### Si repetís la prueba, cambiá estos emails (ya existen en la base)
+@proEmail = profesional1@test.com
+@clienteEmail = cliente1@test.com
+@password = password123
+
+### 1) Sin token -> debe dar 401
+GET {{baseUrl}}/api/professionals
+
+### 2) Login ADMINISTRADOR -> 200 y guarda el token
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+> {%
+    client.global.set("token_admin", response.body.token);
+%}
+
+### 3) Dashboard del admin -> 200
+GET {{baseUrl}}/api/admin/dashboard
+Authorization: Bearer {{token_admin}}
+
+### 4) Admin crea una especialidad -> 201 (guarda el id)
+POST {{baseUrl}}/api/specialties
+Authorization: Bearer {{token_admin}}
+Content-Type: application/json
+
+{
+  "nombre": "Odontología {{$random.integer(1, 1000)}}"
+}
+
+> {%
+    client.global.set("esp_id", response.body.id);
+%}
+
+### 5) Registro público de quien va a ser profesional -> 201 (queda como CLIENTE)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "nombre": "Juan",
+  "apellido": "Díaz",
+  "email": "{{proEmail}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("pro_user_id", response.body.id);
+%}
+
+### 6) Registro de un cliente -> 201
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "nombre": "María",
+  "apellido": "Pérez",
+  "email": "{{clienteEmail}}",
+  "password": "{{password}}"
+}
+
+### 7) Admin le asigna el rol PROFESIONAL -> 200
+PUT {{baseUrl}}/api/admin/users/{{pro_user_id}}/role
+Authorization: Bearer {{token_admin}}
+Content-Type: application/json
+
+{
+  "rol": "PROFESIONAL"
+}
+
+### 8) Admin crea el perfil profesional -> 201 (guarda el id del profesional)
+POST {{baseUrl}}/api/professionals
+Authorization: Bearer {{token_admin}}
+Content-Type: application/json
+
+{
+  "usuarioId": {{pro_user_id}},
+  "especialidadId": {{esp_id}},
+  "telefono": "2235551234"
+}
+
+> {%
+    client.global.set("pro_id", response.body.id);
+%}
+
+### 9) Login del PROFESIONAL -> 200
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{proEmail}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("token_pro", response.body.token);
+%}
+
+### 10) Profesional carga una franja: lunes (1) de 9 a 13 -> 201 (guarda el id de la franja)
+POST {{baseUrl}}/api/professionals/availability
+Authorization: Bearer {{token_pro}}
+Content-Type: application/json
+
+{
+  "diaSemana": 1,
+  "horaInicio": "09:00:00",
+  "horaFin": "13:00:00"
+}
+
+> {%
+    client.global.set("horario_id", response.body.id);
+%}
+
+### 11) Login del CLIENTE -> 200
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{clienteEmail}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("token_cli", response.body.token);
+    client.global.set("cliente_id", response.body.id);
+%}
+
+### 12) Cliente reserva el lunes 23/11/2026 a las 10:00 -> 201, estado PENDIENTE
+### (si probás después del 23/11, usá otro lunes futuro)
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{token_cli}}
+Content-Type: application/json
+
+{
+  "profesionalId": {{pro_id}},
+  "fecha": "2026-11-23",
+  "hora": "10:00:00",
+  "duracionMinutos": 30
+}
+
+> {%
+    client.global.set("turno_id", response.body.id);
+%}
+
+### 13) Reservar un DOMINGO (22/11) -> debe dar 409 (RN-01: ese día no atiende)
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{token_cli}}
+Content-Type: application/json
+
+{
+  "profesionalId": {{pro_id}},
+  "fecha": "2026-11-22",
+  "hora": "10:00:00",
+  "duracionMinutos": 30
+}
+
+### 14) Reservar a las 10:15 (se pisa con el de las 10:00) -> debe dar 409 (RN-02)
+POST {{baseUrl}}/api/appointments
+Authorization: Bearer {{token_cli}}
+Content-Type: application/json
+
+{
+  "profesionalId": {{pro_id}},
+  "fecha": "2026-11-23",
+  "hora": "10:15:00",
+  "duracionMinutos": 30
+}
+
+### 15) El CLIENTE intenta confirmar el turno -> debe dar 403
+PUT {{baseUrl}}/api/appointments/{{turno_id}}/confirm
+Authorization: Bearer {{token_cli}}
+
+### 16) El PROFESIONAL confirma el turno -> 200, estado CONFIRMADO
+PUT {{baseUrl}}/api/appointments/{{turno_id}}/confirm
+Authorization: Bearer {{token_pro}}
+
+### 17) El CLIENTE intenta ver el dashboard del admin -> debe dar 403
+GET {{baseUrl}}/api/admin/dashboard
+Authorization: Bearer {{token_cli}}
+
+### 18) El PROFESIONAL finaliza el turno -> 200, estado FINALIZADO
+PUT {{baseUrl}}/api/appointments/{{turno_id}}/finish
+Authorization: Bearer {{token_pro}}
+
+### ------------------------------------------------------------
+### EXTRAS (opcionales)
+### ------------------------------------------------------------
+
+### 19) Ver el historial del cliente -> 200
+GET {{baseUrl}}/api/appointments/user/{{cliente_id}}
+Authorization: Bearer {{token_cli}}
+
+### 20) Profesional elimina la franja que cargó -> 204
+DELETE {{baseUrl}}/api/professionals/availability/{{horario_id}}
+Authorization: Bearer {{token_pro}}
