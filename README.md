@@ -2,7 +2,7 @@
 
 > **Trabajo Final Integrador (TFI)**
 > 🎓 **Carrera:** Tecnicatura Universitaria en Programación (TUP) — UTN
-> 👥 **Equipo:** Cristian Paolucci, Lautaro Pez, Gabriel Carbajal
+> 👥 **Equipo:** Cristian Paolucci, Lautaro Pez, Gabriel Carbajal,
 > 👩‍🏫 **Tutora:** Sofía Raia
 
 ---
@@ -20,8 +20,10 @@
 9. ⚠️ [Riesgos, Supuestos y Restricciones](#️-riesgos-supuestos-y-restricciones)
 10. 🗄️ [Modelo de Base de Datos](#️-modelo-de-base-de-datos)
 11. 🏗️️ [Arquitectura y Stack Tecnológico](#️-arquitectura-y-stack-tecnológico)
-12. 🔌 [Contratos de API REST](#-contratos-de-api-rest)
-13. 🚀 [Roadmap de Escalabilidad](#-roadmap-de-escalabilidad)
+12. 🛠️ [Instalación y Ejecución](#️-instalación-y-ejecución)
+13. 🔌 [Contratos de API REST](#-contratos-de-api-rest)
+14. 🚀 [Roadmap de Escalabilidad](#-roadmap-de-escalabilidad)
+15. 📦 [Entrega Final y Limitaciones](#-entrega-final-y-limitaciones)
 
 ---
 
@@ -29,9 +31,10 @@
 
 El equipo de desarrollo está conformado por:
 
-* **Gabriel Carbajal**
-* **Cristian Paolucci**
 * **Lautaro Pez**
+* **Cristian Paolucci**
+* **Gabriel Carbajal**
+
 
 **Tutora:** Sofía Raia
 
@@ -566,6 +569,96 @@ El proyecto adopta una **arquitectura desacoplada de tres capas lógicas**:
 
 ---
 
+## 🛠️ Instalación y Ejecución
+
+### Requisitos
+
+* **Java 17**
+* **Node.js 18 o superior** (incluye `npm`)
+* **PostgreSQL 14 o superior** (la extensión `btree_gist` viene en el paquete estándar `contrib`)
+* **Git**
+
+Maven no hace falta instalarlo: el proyecto incluye el *wrapper* (`mvnw`).
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/Lautapez/TurnoFacil---Trabajo-Final-TUP.git
+cd TurnoFacil---Trabajo-Final-TUP
+```
+
+### 2. Base de datos
+
+```bash
+createdb -U postgres turnofacil
+psql -U postgres -d turnofacil -f database/schema.sql
+```
+
+Hibernate corre en modo `validate`: **no crea tablas**, por eso hay que cargar `database/schema.sql` antes de arrancar el backend.
+
+### 3. Variables de entorno del backend
+
+Copiar `backend/.env.example` a `backend/.env` y completarlo (la tabla de variables está en [Contratos de API REST](#-contratos-de-api-rest)). Como mínimo hay que definir `JWT_SECRET` (32+ caracteres; se puede generar con `openssl rand -base64 48`), la contraseña de la base y `ADMIN_EMAIL` / `ADMIN_PASSWORD` para el primer administrador.
+
+Spring Boot **no lee** archivos `.env` por sí solo. Hay que cargarlas en la terminal donde se arranca el backend:
+
+```bash
+# Linux / Mac
+cd backend
+set -a; source .env; set +a
+
+# PowerShell
+cd backend
+Get-Content .env | Where-Object { $_ -match '^[^#].*=' } | ForEach-Object { $k,$v = $_ -split '=',2; Set-Item "env:$k" $v }
+```
+
+O definirlas en la configuración de ejecución del IDE (IntelliJ / VS Code). El archivo `.env` está ignorado por Git: no se sube al repositorio.
+
+### 4. Backend
+
+```bash
+cd backend
+./mvnw spring-boot:run        # Windows: .\mvnw.cmd spring-boot:run
+```
+
+Queda disponible en `http://localhost:8080`. Si falta `JWT_SECRET` la aplicación no arranca (es intencional).
+
+### 5. Primer administrador
+
+Al arrancar, si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidas y ese email no existe, el backend crea un usuario con rol `ADMINISTRADOR`. El registro público **siempre crea clientes**: el rol `PROFESIONAL` solo lo asigna un administrador.
+
+### 6. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Abrir `http://localhost:5173`. En desarrollo, Vite redirige `/api` al backend (puerto 8080), por lo que no hace falta configurar nada más.
+
+### 7. Primer uso (flujo completo)
+
+1. Iniciar sesión con el administrador y crear una **especialidad** (pestaña *Especialidades*).
+2. Cerrar sesión y **registrar** un usuario nuevo (será `CLIENTE`).
+3. Como administrador, en *Usuarios* asignarle el rol `PROFESIONAL` y en *Profesionales* crear su **perfil** (especialidad y teléfono).
+4. Entrar como ese profesional y cargar sus franjas en *Mi agenda semanal*.
+5. Registrar un cliente y **reservar** un turno dentro de una franja cargada.
+6. Como profesional, **confirmar** y **finalizar** el turno desde el panel.
+
+> Si a un usuario se le cambió el rol mientras tenía la sesión abierta, debe cerrar sesión y volver a entrar para ver su nueva pantalla.
+
+### Tests
+
+```bash
+cd backend
+./mvnw test        # Windows: .\mvnw.cmd test
+```
+
+Los tests **no requieren configuración ni base de datos**: cubren las reglas de negocio (RN-01 a RN-04, reprogramación, propiedad de los turnos) y la seguridad por rol. Además hay un test opcional de la restricción `EXCLUDE` y de la concurrencia contra un PostgreSQL real; se omite solo si no se define `TEST_DB_URL` (ver [`docs/PRUEBA_CONCURRENCIA.md`](docs/PRUEBA_CONCURRENCIA.md), que también incluye la demostración manual).
+
+---
+
 ## 🔌 Contratos de API REST
 
 Todos los endpoints, salvo `/api/auth/**`, exigen el header `Authorization: Bearer <token>`. Sin token la API responde `401`; con un rol insuficiente o sobre un recurso ajeno responde `403`.
@@ -580,6 +673,8 @@ El registro público **siempre crea un `CLIENTE`**. Los roles `PROFESIONAL` y `A
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | No | Conexión a PostgreSQL (hay valores por defecto para desarrollo local). |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | No | Crean el primer usuario `ADMINISTRADOR` si no existe. |
 | `JWT_EXPIRATION` | No | Vigencia del token en milisegundos (por defecto 24 h). |
+| `CORS_ALLOWED_ORIGINS` | No | Solo para despliegue: URL(s) del frontend permitidas por CORS, separadas por coma. |
+| `PORT` | No | Puerto HTTP (por defecto 8080; las plataformas de hosting lo definen solas). |
 
 ### 🔐 Autenticación
 
@@ -686,6 +781,32 @@ Implementación de:
 
 ---
 
+
+## 📦 Entrega Final y Limitaciones
+
+### 🔗 Enlaces de la entrega
+
+| Entregable | Enlace |
+| :--- | :--- |
+| 🌐 Sistema desplegado online | **PENDIENTE:** completar con la URL del frontend (guía en [`docs/DESPLIEGUE.md`](docs/DESPLIEGUE.md)) |
+| 📄 Informe final (PDF) | **PENDIENTE:** agregar el PDF al repositorio y enlazarlo acá |
+| 🎬 Video explicativo | **PENDIENTE:** completar con el enlace al video |
+| 🧪 Prueba de concurrencia (restricción `EXCLUDE`) | [`docs/PRUEBA_CONCURRENCIA.md`](docs/PRUEBA_CONCURRENCIA.md) |
+
+### ⚠️ Limitaciones conocidas
+
+Lo que **no está resuelto** en esta versión:
+
+* **El token JWT se guarda en `localStorage`.** Un ataque XSS podría robarlo. La alternativa más segura es una cookie `HttpOnly` (con su protección CSRF) y un token de acceso de vida corta con *refresh token*.
+* **No hay revocación de tokens ni cierre de sesión en el servidor:** un token es válido hasta que vence. Lo que sí se controla en cada pedido es que el usuario siga existiendo y activo, y su rol se lee de la base, no del token.
+* **No hay recuperación de contraseña.** Las contraseñas se guardan con BCrypt y no pueden consultarse; hoy un olvido se resuelve creando otra cuenta o cambiando el hash en la base.
+* **No hay protección contra fuerza bruta en el login** (límite de intentos).
+* **El frontend conserva el rol de la sesión** hasta el próximo inicio de sesión: si un administrador cambia el rol de alguien, esa persona debe volver a entrar para ver su nueva pantalla (el backend ya aplica el cambio de inmediato).
+* **La prueba de concurrencia contra PostgreSQL real es opcional** (se omite si no se configura una base de prueba) y no hay pruebas de integración HTTP de punta a punta ni pruebas automatizadas del frontend.
+* **Sin notificaciones ni recordatorios,** sin manejo de feriados o excepciones de agenda, y un solo negocio por instalación (ver *Exclusiones del MVP* y *Roadmap*).
+* **Despliegue en planes gratuitos:** el backend en Render puede tardar en responder tras un período de inactividad.
+
+---
 
 ## 🎓 Trabajo Final Integrador
 
