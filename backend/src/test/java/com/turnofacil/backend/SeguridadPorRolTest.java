@@ -16,13 +16,13 @@ import com.turnofacil.backend.services.ProfesionalService;
 import com.turnofacil.backend.services.TurnoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -35,19 +35,22 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringJUnitConfig(SeguridadPorRolTest.Config.class)
 class SeguridadPorRolTest {
 
+    // Solo se registran los controladores reales; sus servicios son mocks (@MockitoBean más abajo).
     @Configuration
     @EnableMethodSecurity
     static class Config {
-        @Bean TurnoService turnoService() { return Mockito.mock(TurnoService.class); }
-        @Bean ProfesionalService profesionalService() { return Mockito.mock(ProfesionalService.class); }
-        @Bean EspecialidadService especialidadService() { return Mockito.mock(EspecialidadService.class); }
-        @Bean AdminService adminService() { return Mockito.mock(AdminService.class); }
-
         @Bean TurnoController turnoController() { return new TurnoController(); }
         @Bean ProfesionalController profesionalController() { return new ProfesionalController(); }
         @Bean EspecialidadController especialidadController() { return new EspecialidadController(); }
         @Bean AdminController adminController() { return new AdminController(); }
     }
+
+    // @MockitoBean crea los mocks SIN inyectarles dependencias. Registrarlos con @Bean + Mockito.mock()
+    // hacía que Spring intentara resolver sus campos @Autowired (por ejemplo TurnoRepository) y fallara.
+    @MockitoBean private TurnoService turnoService;
+    @MockitoBean private ProfesionalService profesionalService;
+    @MockitoBean private EspecialidadService especialidadService;
+    @MockitoBean private AdminService adminService;
 
     @Autowired private TurnoController turnoController;
     @Autowired private ProfesionalController profesionalController;
