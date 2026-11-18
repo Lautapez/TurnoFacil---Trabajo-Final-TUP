@@ -38,7 +38,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @EnabledIfEnvironmentVariable(named = "TEST_DB_URL", matches = ".+")
 class RestriccionExclusionDbTest {
 
-    private static final String EXCLUSION_VIOLATION = "23P01"; // SQLSTATE de exclusion_violation en PostgreSQL
+    private static final String EXCLUSION_VIOLATION = "23P01"; // exclusion_violation: la restricción rechazó la fila
+    // Con dos transacciones simultáneas que se pisan, PostgreSQL puede rechazar a la perdedora de
+    // cualquiera de estas dos formas; en ambas la base impidió la doble reserva.
+    private static final String DEADLOCK_DETECTED = "40P01";
     private static final LocalDate FECHA = LocalDate.of(2030, 1, 7);
 
     private static Connection admin;
@@ -174,7 +177,7 @@ class RestriccionExclusionDbTest {
     }
 
     @Test
-    @DisplayName("Concurrencia: dos reservas simultáneas del mismo horario, solo una prospera")
+    @DisplayName("Concurrencia: dos reservas simultáneas del mismo horario, solo una prospera (la otra: 23P01 o 40P01)")
     void dosReservasSimultaneasSoloUnaGana() throws Exception {
         CyclicBarrier salida = new CyclicBarrier(2);
         ExecutorService pool = Executors.newFixedThreadPool(2);
@@ -200,7 +203,9 @@ class RestriccionExclusionDbTest {
             List<String> resultados = List.of(a.get(), b.get());
 
             assertEquals(1, resultados.stream().filter("OK"::equals).count(), "Debe ganar exactamente una: " + resultados);
-            assertEquals(1, resultados.stream().filter(EXCLUSION_VIOLATION::equals).count(), "La otra debe fallar por exclusión: " + resultados);
+            assertEquals(1, resultados.stream()
+                            .filter(r -> EXCLUSION_VIOLATION.equals(r) || DEADLOCK_DETECTED.equals(r)).count(),
+                    "La otra debe ser rechazada por la base (23P01 o 40P01): " + resultados);
         } finally {
             pool.shutdownNow();
         }
