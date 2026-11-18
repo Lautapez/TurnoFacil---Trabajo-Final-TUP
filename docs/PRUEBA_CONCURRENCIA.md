@@ -44,9 +44,13 @@ Qué comprueba (todos los datos que crea los borra al terminar):
 | 10:00-10:30 y 10:30-11:00 | Se permiten (turnos consecutivos) |
 | Un turno `CANCELADO` a las 10:00 y otro `PENDIENTE` a las 10:00 | Se permiten (RN-03) |
 | Mismo horario en dos profesionales distintos | Se permite |
-| **Dos transacciones simultáneas** insertando el mismo horario | Exactamente una confirma y la otra falla con `23P01` |
+| **Dos transacciones simultáneas** insertando el mismo horario | Exactamente una confirma y la otra es rechazada por la base, con `23P01` (violación de la restricción) o `40P01` (deadlock detectado) |
 
 > Si la base de prueba no tiene cargado `schema.sql` (o no tiene la extensión `btree_gist`), los tests fallan al preparar los datos: no es un error de la aplicación.
+
+---
+
+> **Por qué puede aparecer `40P01`:** cuando dos transacciones insertan a la vez turnos que se pisan, cada una queda esperando a la otra. PostgreSQL detecta el deadlock, aborta una y deja pasar la otra. Es un comportamiento normal de las restricciones `EXCLUDE`: en ambos casos la base impidió la doble reserva. `TurnoService` traduce las dos situaciones al mismo mensaje de solapamiento (409).
 
 ---
 
@@ -113,4 +117,4 @@ DELETE FROM especialidades WHERE nombre = 'Demo';
 - El servicio valida RN-01 y RN-02 para devolver un mensaje claro al usuario (validación "amable").
 - Pero entre la validación y el guardado hay una ventana: dos solicitudes simultáneas pueden pasar ambas la validación.
 - Por eso la regla se **garantiza en la base de datos**: es la única forma de que sea correcta bajo concurrencia, sin depender de bloqueos en la aplicación.
-- Cuando la base rechaza, `TurnoService` captura `DataIntegrityViolationException` y devuelve el mismo mensaje de solapamiento (409), no un error genérico.
+- Cuando la base rechaza, `TurnoService` captura `DataIntegrityViolationException` (restricción, `23P01`) y `PessimisticLockingFailureException` (deadlock, `40P01`) y devuelve el mismo mensaje de solapamiento (409), no un error genérico.
