@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.DayOfWeek;
@@ -213,6 +214,21 @@ public class TurnoServiceTest {
         TurnoResponseDTO res = turnoService.crearTurno(10L, dto(LUNES, LocalTime.of(10, 30), 30));
 
         assertEquals(LocalTime.of(10, 30), res.getHora());
+    }
+
+    @Test
+    @DisplayName("RN-02: si la base resuelve una carrera con un deadlock, el usuario recibe el mensaje de solapamiento (no un 500)")
+    void rn02_deadlockDeLaBaseSeTraduceAConflicto() {
+        Usuario cliente = usuario(10L, Rol.CLIENTE);
+        Profesional pro = prepararReserva(cliente, usuario(20L, Rol.PROFESIONAL));
+        when(horarioRepository.findByProfesionalIdAndDiaSemana(1L, 1)).thenReturn(List.of(franja(pro, 1, 9, 13)));
+        when(turnoRepository.findByProfesionalIdAndFechaAndEstadoNot(1L, LUNES, EstadoTurno.CANCELADO)).thenReturn(List.of());
+        when(turnoRepository.save(any(Turno.class))).thenThrow(new DeadlockLoserDataAccessException("deadlock detectado", null));
+
+        ConflictoTurnoException ex = assertThrows(ConflictoTurnoException.class,
+                () -> turnoService.crearTurno(10L, dto(LUNES, LocalTime.of(10, 0), 30)));
+
+        assertTrue(ex.getMessage().contains("se superpone"));
     }
 
     // ---------------------------------------------------------------- RN-03
