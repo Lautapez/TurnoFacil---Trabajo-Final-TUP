@@ -17,6 +17,7 @@ import com.turnofacil.backend.repositories.TurnoRepository;
 import com.turnofacil.backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -306,11 +307,15 @@ public class TurnoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("El turno con ID " + id + " no fue encontrado."));
     }
 
-    // La restricción de exclusión de la base es la última barrera ante reservas concurrentes
+    // La restricción de exclusión de la base es la última barrera ante reservas concurrentes.
+    // Si dos reservas que se pisan llegan al mismo tiempo, PostgreSQL rechaza una de dos maneras:
+    // como violación de la restricción (23P01 -> DataIntegrityViolationException) o, cuando las
+    // transacciones se esperan mutuamente, como deadlock (40P01 -> PessimisticLockingFailureException).
+    // En ambos casos el usuario recibe el mismo mensaje de superposición (409), no un error 500.
     private TurnoResponseDTO guardar(Turno turno) {
         try {
             return mapearAResponseDTO(turnoRepository.save(turno));
-        } catch (DataIntegrityViolationException e) {
+        } catch (DataIntegrityViolationException | PessimisticLockingFailureException e) {
             throw new ConflictoTurnoException("El horario se superpone con otro turno activo del profesional (RN-02).");
         }
     }
