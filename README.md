@@ -647,6 +647,17 @@ npm run dev
 
 Abrir `http://localhost:5173`. En desarrollo, Vite redirige `/api` al backend (puerto 8080), por lo que no hace falta configurar nada más.
 
+#### Ejecución local del frontend y CORS en desarrollo
+1. Abrí una terminal en la carpeta `frontend` y ejecutá:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+2. Abrí en el navegador `http://localhost:5173/`.
+3. Si accedés directamente al backend (`http://localhost:8080`) desde el origen del frontend (`http://localhost:5173`) y ves un aviso de CORS (`Invalid CORS request`), agregá `CORS_ALLOWED_ORIGINS=http://localhost:5173` en las variables de entorno de la ejecución del backend y reiniciá el servidor.
+
 ### 7. Primer uso (flujo completo)
 
 1. Iniciar sesión con el administrador y crear una **especialidad** (pestaña *Especialidades*).
