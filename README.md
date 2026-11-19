@@ -614,6 +614,16 @@ Get-Content .env | Where-Object { $_ -match '^[^#].*=' } | ForEach-Object { $k,$
 
 O definirlas en la configuración de ejecución del IDE (IntelliJ / VS Code). El archivo `.env` está ignorado por Git: no se sube al repositorio.
 
+#### Ejecución del backend desde IntelliJ IDEA
+1. Abrí el proyecto en **IntelliJ IDEA** y aceptá cargar Maven (`backend/pom.xml`).
+2. Abrí `backend/src/main/java/com/turnofacil/backend/TurnofacilBackendApplication.java`.
+3. Hacé clic derecho sobre la clase → **More Run/Debug** → **Modify Run Configuration...**.
+4. Activá **Environment variables** y cargá las variables separadas por `;` (ejemplo):
+
+`DB_URL=jdbc:postgresql://localhost:5432/turnofacil;DB_USERNAME=postgres;DB_PASSWORD=TU_CONTRASEÑA;JWT_SECRET=TU_CLAVE_SECRETA_DE_32_CARACTERES_MINIMO;ADMIN_EMAIL=admin@turnofacil.com;ADMIN_PASSWORD=TU_CLAVE_ADMIN;CORS_ALLOWED_ORIGINS=http://localhost:5173`
+
+5. Guardá con **Apply** y **OK**, y ejecutá **`TurnofacilBackendApplication`** con **Run** (`▶`) hasta ver que levanta en el puerto `8080`.
+
 ### 4. Backend
 
 ```bash
