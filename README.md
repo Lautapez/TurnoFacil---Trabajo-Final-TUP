@@ -678,6 +678,8 @@ cd backend
 
 Los tests **no requieren configuración ni base de datos**: cubren las reglas de negocio (RN-01 a RN-04, reprogramación, propiedad de los turnos) y la seguridad por rol. Además hay un test opcional de la restricción `EXCLUDE` y de la concurrencia contra un PostgreSQL real; se omite solo si no se define `TEST_DB_URL` (ver [`docs/PRUEBA_CONCURRENCIA.md`](docs/PRUEBA_CONCURRENCIA.md), que también incluye la demostración manual).
 
+#### Ejecución de tests desde IntelliJ IDEA
+Podés ejecutar cualquiera de las clases de prueba de `backend/src/test/java` directamente desde **IntelliJ IDEA** haciendo clic derecho sobre la clase o paquete y eligiendo **Run** (`▶`), o bien correr toda la suite con `./mvnw test` desde la terminal.
 ---
 
 ## 🔌 Contratos de API REST
