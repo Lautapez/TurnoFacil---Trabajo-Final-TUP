@@ -598,6 +598,8 @@ Hibernate corre en modo `validate`: **no crea tablas**, por eso hay que cargar `
 
 ### 3. Variables de entorno del backend
 
+Credenciales de prueba (entorno local): admin@turnofacil.com / Admin12345
+
 Copiar `backend/.env.example` a `backend/.env` y completarlo (la tabla de variables está en [Contratos de API REST](#-contratos-de-api-rest)). Como mínimo hay que definir `JWT_SECRET` (32+ caracteres; se puede generar con `openssl rand -base64 48`), la contraseña de la base y `ADMIN_EMAIL` / `ADMIN_PASSWORD` para el primer administrador.
 
 Spring Boot **no lee** archivos `.env` por sí solo. Hay que cargarlas en la terminal donde se arranca el backend:
@@ -620,7 +622,7 @@ O definirlas en la configuración de ejecución del IDE (IntelliJ / VS Code). El
 3. Hacé clic derecho sobre la clase → **More Run/Debug** → **Modify Run Configuration...**.
 4. Activá **Environment variables** y cargá las variables separadas por `;` (ejemplo):
 
-`DB_URL=jdbc:postgresql://localhost:5432/turnofacil;DB_USERNAME=postgres;DB_PASSWORD=TU_CONTRASEÑA;JWT_SECRET=TU_CLAVE_SECRETA_DE_32_CARACTERES_MINIMO;ADMIN_EMAIL=admin@turnofacil.com;ADMIN_PASSWORD=TU_CLAVE_ADMIN;CORS_ALLOWED_ORIGINS=http://localhost:5173`
+DB_URL=jdbc:postgresql://localhost:5432/turnofacil;DB_USERNAME=postgres;DB_PASSWORD=TU_CONTRASEÑA;JWT_SECRET=TU_CLAVE_SECRETA_DE_32_CARACTERES_MINIMO;ADMIN_EMAIL=admin@turnofacil.com;ADMIN_PASSWORD=Admin12345;CORS_ALLOWED_ORIGINS=http://localhost:5173
 
 5. Guardá con **Apply** y **OK**, y ejecutá **`TurnofacilBackendApplication`** con **Run** (`▶`) hasta ver que levanta en el puerto `8080`.
 
